@@ -1,1459 +1,1148 @@
 -- Decompiler will be improved VERY SOON!
 -- Decompiled with Konstant V2.1, a fast Luau decompiler made in Luau by plusgiant5 (https://discord.gg/brNTY8nX8t)
--- Decompiled on 2025-08-14 07:55:45
+-- Decompiled on 2025-08-16 05:13:13
 -- Luau version 6, Types version 3
--- Time taken: 0.046754 seconds
+-- Time taken: 0.042530 seconds
 
-local new_upvr_2 = CFrame.new
-local Angles_upvr = CFrame.Angles
-local new_upvr_4 = Vector3.new
-local new_upvr_3 = Instance.new
-local new_upvr = TweenInfo.new
+local new_upvr_2 = UDim2.new
 local module_upvr = {
-	Max_Force = Vector3.new(5500, 5500, 5500);
-	Speed = new_upvr_2(0, 0, 0);
-	Flip_Type = nil;
-	Moving_Magnitude = new_upvr_2(0, 0, 0);
-	Gas_SFX = nil;
-	Mega_Boost_Speed = 0;
-	Escaped = {
-		State = false;
-		Gained = false;
+	Map = {
+		Name = nil;
+		Difficulty = nil;
+		Type = nil;
+		Objective = "Skirmish";
 	};
-	Usage = {
-		Flip = 10;
-		Mega_Boost = 25;
-		Hook_1 = 2;
-		Hook_1_Boost = 3;
-		Hook_2 = 3;
-		Hook_2_Boost = 5;
+	Selected_Map = {
+		Name = nil;
+		Difficulty = nil;
+		Type = nil;
+		Limit = nil;
+		Object = nil;
 	};
-	Last_Gas = tick();
-	Last_Flip = {
-		Type = "";
-		Amount = 0;
-		Cooldown = false;
+	Leaving = false;
+	Object_Events = nil;
+	Current_Frame = nil;
+	Current_Close_Event = nil;
+	Open = false;
+	Map_Object = nil;
+	Icons = {
+		Shiganshina = 14990673687;
+		Trost = 14990807796;
+		["Giant Forest"] = 14990811142;
+		Outskirts = 14990809583;
+		Utgard = 18166027357;
+		["Loading Docks"] = 82515301654640;
+		Stohess = 93895615555111;
+		["Attack Titan"] = 17660993868;
+		["Armored Titan"] = 84552305810975;
+		["Female Titan"] = 109020931498025;
 	};
-	Tips = {};
-	Off_Ground = false;
-	Grounded = false;
-	Gear_Speed = 150;
-	Last_Hook = tick();
-	M1_Frames = {
-		Floor_Hit_1 = {13, 30};
-		Floor_Hit_2 = {10, 30};
-		Floor_Hit_3 = {5, 30};
-		Air_Hit_1 = {11, 30};
-		Air_Hit_2 = {5, 30};
-		Air_Hit_3 = {5, 30};
-		Spear_Hit_1 = {35, 60, 43};
-		Spear_Hit_2 = {35, 60, 43};
+	Colours = {
+		Easy = Color3.fromRGB(255, 255, 255);
+		Normal = Color3.fromRGB(105, 255, 78);
+		Hard = Color3.fromRGB(255, 171, 75);
+		Severe = Color3.fromRGB(197, 80, 255);
+		Aberrant = Color3.fromRGB(255, 80, 83);
+	};
+	Unlocked = {
+		Missions = {};
+		Raids = {};
 	};
 	Events = {};
+	Updated = false;
+	Click_Events = {};
+	Objective_Events = {};
+	Boost_Colours = {
+		Gold = Color3.fromRGB(185, 120, 36);
+		Luck = Color3.fromRGB(76, 236, 29);
+		EXP = Color3.fromRGB(243, 139, 255);
+	};
+	Difficulty_Indexes = {
+		Missions = {
+			Easy = 1;
+			Normal = 2;
+			Hard = 3;
+			Severe = 4;
+			Aberrant = 5;
+		};
+		Raids = {
+			Hard = 3;
+			Severe = 4;
+			Aberrant = 5;
+		};
+	};
+	Map_Boost_Object = nil;
+	Objectives_Open = false;
+	Modifiers_Open = false;
+	Raids = {
+		Trost = "Attack Titan";
+		Shiganshina = "Armored Titan";
+		Stohess = "Female Titan";
+	};
+	Transition = nil;
 }
-math.randomseed(tick())
-function module_upvr.Rig(arg1, arg2) -- Line 65
-	local var19
-	if var19 == nil then
-		var19 = arg1.Cache.Player.Character
-	end
-	if var19 ~= nil then
-		return var19:FindFirstChild("Rig_"..var19.Name)
-	end
-end
-function module_upvr.Blade_Check(arg1, arg2, arg3) -- Line 85
-	--[[ Upvalues[1]:
+local new_upvr = Vector2.new
+function module_upvr.Fade(arg1, arg2) -- Line 98
+	--[[ Upvalues[3]:
 		[1]: module_upvr (readonly)
+		[2]: new_upvr (readonly)
+		[3]: new_upvr_2 (readonly)
 	]]
-	local any_Rig_result1_2 = module_upvr.Rig(arg1, arg2)
-	local function INLINED() -- Internal function, doesn't exist in bytecode
-		local RightHand = any_Rig_result1_2:FindFirstChild("RightHand")
-		local LeftHand = any_Rig_result1_2:FindFirstChild("LeftHand")
-		return LeftHand ~= nil
+	-- KONSTANTWARNING: Variable analysis failed. Output will have some incorrect variable assignments
+	-- KONSTANTERROR: [0] 1. Error Block 58 start (CF ANALYSIS FAILED)
+	local Modules_2 = arg1.Modules
+	local Events_7 = arg1.Events
+	local Effects_2 = Modules_2.Effects
+	local Lobby_Type_2 = Modules_2.Topbar.Lobby_Type
+	local Missions_upvr_2 = arg1.Cache.Interface.Missions
+	local var52 = module_upvr
+	var52.Open = arg2
+	local var53
+	if Lobby_Type_2 == "2D" then
+		var52 = 0
+	else
+		var52 = 0.5
 	end
-	if any_Rig_result1_2 ~= nil and (arg1.Weapon == "Blades" or arg3 == true) or INLINED() and RightHand ~= nil then
-		for i = 7, 1, -1 do
-			local SOME_2 = LeftHand:FindFirstChild("Blade_"..i)
-			local SOME = RightHand:FindFirstChild("Blade_"..i)
-			if SOME_2 ~= nil and SOME ~= nil and SOME_2:GetAttribute("Broken") == nil then
-				return true, any_Rig_result1_2, SOME_2, SOME
-			end
-		end
+	if Lobby_Type_2 == "2D" then
+		var53 = 1
+	else
+		var53 = 0.5
 	end
-	return nil, any_Rig_result1_2
-end
-function module_upvr.Spear_Check(arg1, arg2, arg3, arg4, arg5, arg6) -- Line 105
-	--[[ Upvalues[1]:
-		[1]: module_upvr (readonly)
-	]]
-	-- KONSTANTERROR: [0] 1. Error Block 1 start (CF ANALYSIS FAILED)
-	local any_Rig_result1 = module_upvr.Rig(arg1, arg2)
-	-- KONSTANTERROR: [0] 1. Error Block 1 end (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [14] 11. Error Block 3 start (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [14] 11. Error Block 3 end (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [185] 136. Error Block 54 start (CF ANALYSIS FAILED)
-	task.synchronize()
-	-- KONSTANTERROR: [185] 136. Error Block 54 end (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [188] 138. Error Block 45 start (CF ANALYSIS FAILED)
-	do
-		return nil, nil, any_Rig_result1
+	if Lobby_Type_2 == "2D" then
+	else
 	end
-	-- KONSTANTERROR: [188] 138. Error Block 45 end (CF ANALYSIS FAILED)
-end
-function module_upvr.Get_Reload(arg1) -- Line 166
-	if arg1 ~= nil then
-		for i_2 = 1, 3 do
-			local SOME_4 = arg1:FindFirstChild("Left_"..i_2, true)
-			local SOME_3 = arg1:FindFirstChild("Right_"..i_2, true)
-			if SOME_4 ~= nil and SOME_3 ~= nil and SOME_4:GetAttribute("Used") == nil then
-				return SOME_4, SOME_3
-			end
-		end
+	if Lobby_Type_2 == "2D" then
+	else
 	end
-end
-function module_upvr.Reduced_Gas(arg1, arg2, arg3) -- Line 178
-	local Modules_7 = arg1.Modules
-	local Stats_3 = arg1.Stats
-	local var32
-	if arg2 < Stats_3.ODM_Gas then
-		Stats_3.ODM_Gas -= arg2
-		local function INLINED_2() -- Internal function, doesn't exist in bytecode
-			var32 = Modules_7.Effects
-			return var32
-		end
-		if arg3 == nil or not INLINED_2() then
-			var32 = nil
-		end
-		Modules_7.HUD.Update(arg1, var32, "Gas", Stats_3.ODM_Gas, Stats_3.Maximum_ODM_Gas)
-		return true
+	local Prompt = Missions_upvr_2.Prompt
+	Prompt.AnchorPoint = new_upvr(var52, var53)
+	Missions_upvr_2.Prompt.Position = new_upvr_2(0.5, 0, 0.5, 0)
+	-- KONSTANTERROR: [0] 1. Error Block 58 end (CF ANALYSIS FAILED)
+	-- KONSTANTERROR: [130] 97. Error Block 46 start (CF ANALYSIS FAILED)
+	Effects_2.Tween(arg1, Missions_upvr_2, "Missions_In", {
+		BackgroundTransparency = 0.25;
+	}, 0.15)
+	if Prompt == "Prompt" then
+		Effects_2.Hover(arg1, Missions_upvr_2.Prompt.Main.Selection.Missions, Missions_upvr_2, module_upvr, "Mission", true, Missions_upvr_2.Prompt.Main.Selection.Missions.Inner.Interact)
+		Effects_2.Hover(arg1, Missions_upvr_2.Prompt.Main.Selection.Raids, Missions_upvr_2, module_upvr, "Mission", true, Missions_upvr_2.Prompt.Main.Selection.Raids.Inner.Interact)
+		Effects_2.Hover(arg1, Missions_upvr_2.Prompt.Main.Selection.Join, Missions_upvr_2, module_upvr, "Mission", true, Missions_upvr_2.Prompt.Main.Selection.Join.Inner.Interact)
+		Effects_2.Hover(arg1, Missions_upvr_2.Prompt.Main.Lobbies_Close, Missions_upvr_2, module_upvr, "Mission", true, Missions_upvr_2.Prompt.Main.Lobbies_Close.Interact)
+		return
 	end
-end
-function module_upvr.Tasks(arg1, arg2, arg3, arg4, arg5) -- Line 190
-	--[[ Upvalues[1]:
-		[1]: module_upvr (readonly)
-	]]
-	local Modules_3_upvr = arg1.Modules
-	local Cache_13_upvr = arg1.Cache
-	local Stats_4_upvr = arg1.Stats
-	local Effects_upvr_2 = Modules_3_upvr.Effects
-	local Variables_3_upvr = Cache_13_upvr.Variables
-	local var44 = 1
-	for i_3, var50 in pairs(module_upvr.Events) do
-		task.cancel(var50)
-	end
-	module_upvr.Events = {}
-	if arg3 == "Full_Reload" then
-		i_3 = "Reload"
-		var50 = Modules_3_upvr.Zones.Refill_Station
-		arg1:Send("Attacks", i_3, var50)
-		if table.find(Stats_4_upvr.Talents, '3') ~= nil then
-			var44 = 1.35
-		end
-		for i_4 = 1, 2 do
-			var50 = module_upvr.Events
-			i_3 = table.insert
-			i_3(var50, task.delay(arg2[i_4] / 60 / var44, function() -- Line 208
-				--[[ Upvalues[6]:
-					[1]: Variables_3_upvr (readonly)
-					[2]: arg3 (readonly)
-					[3]: Stats_4_upvr (readonly)
-					[4]: Modules_3_upvr (readonly)
-					[5]: arg1 (readonly)
-					[6]: Effects_upvr_2 (readonly)
-				]]
-				if Variables_3_upvr[arg3] == true then
-					Stats_4_upvr.ODM_Gas = math.clamp(Stats_4_upvr.ODM_Gas + Stats_4_upvr.Maximum_ODM_Gas / 2, 0, Stats_4_upvr.Maximum_ODM_Gas)
-					Modules_3_upvr.HUD.Update(arg1, Effects_upvr_2, "Gas", Stats_4_upvr.ODM_Gas, Stats_4_upvr.Maximum_ODM_Gas)
-				end
-			end))
-		end
-		i_3 = arg2[3]
-		task.delay(i_3 / 60 / var44, function() -- Line 217
-			--[[ Upvalues[2]:
-				[1]: Variables_3_upvr (readonly)
-				[2]: arg3 (readonly)
-			]]
-			Variables_3_upvr[arg3] = false
-		end)
-	elseif arg3 == "Reload" then
-		var50 = arg2[1] / 60
-		i_3 = var50 / var44
-		function var50() -- Line 221
-			--[[ Upvalues[5]:
-				[1]: Variables_3_upvr (readonly)
-				[2]: arg3 (readonly)
-				[3]: arg1 (readonly)
-				[4]: Effects_upvr_2 (readonly)
-				[5]: arg4 (readonly)
-			]]
-			task.delay(0.1, function() -- Line 222
-				--[[ Upvalues[5]:
-					[1]: Variables_3_upvr (copied, readonly)
-					[2]: arg3 (copied, readonly)
-					[3]: arg1 (copied, readonly)
-					[4]: Effects_upvr_2 (copied, readonly)
-					[5]: arg4 (copied, readonly)
-				]]
-				if Variables_3_upvr[arg3] == true then
-					arg1:Invoke("Blades", "Reload")
-					Effects_upvr_2.Reload(arg1)
-					Effects_upvr_2.Sound(arg1, "Refill", arg4)
-				end
-			end)
-		end
-		table.insert(module_upvr.Events, task.delay(i_3, var50))
-		i_3 = arg2[2]
-		task.delay(i_3 / 60 / var44, function() -- Line 225
-			--[[ Upvalues[2]:
-				[1]: Variables_3_upvr (readonly)
-				[2]: arg3 (readonly)
-			]]
-			Variables_3_upvr[arg3] = false
-		end)
-	elseif arg3:find("Hit") ~= nil then
-		local Slash_upvr_2 = Variables_3_upvr.Slash
-		i_3 = "Spear"
-		if arg3:find(i_3) == nil then
-		end
-		local Speed_upvw = Slash_upvr_2.Speed
-		local Character_5_upvr = Cache_13_upvr.Character
-		local function Continue_upvr() -- Line 232, Named "Continue"
-			--[[ Upvalues[11]:
-				[1]: module_upvr (copied, readonly)
-				[2]: arg2 (readonly)
-				[3]: Speed_upvw (read and write)
-				[4]: Slash_upvr_2 (readonly)
-				[5]: Cache_13_upvr (readonly)
-				[6]: arg3 (readonly)
-				[7]: arg1 (readonly)
-				[8]: Effects_upvr_2 (readonly)
-				[9]: Modules_3_upvr (readonly)
-				[10]: Character_5_upvr (readonly)
-				[11]: arg4 (readonly)
-			]]
-			table.insert(module_upvr.Events, task.delay((arg2[2] - arg2[1]) / 60 / Speed_upvw, function() -- Line 234
-				--[[ Upvalues[5]:
-					[1]: Slash_upvr_2 (copied, readonly)
-					[2]: Cache_13_upvr (copied, readonly)
-					[3]: arg3 (copied, readonly)
-					[4]: arg1 (copied, readonly)
-					[5]: Effects_upvr_2 (copied, readonly)
-				]]
-				if Slash_upvr_2.Slashing == true then
-					Slash_upvr_2.Slashing = false
-					Slash_upvr_2.Holding = false
-					Slash_upvr_2.Released = false
-					Cache_13_upvr.Animations[arg3]:Stop(1)
-					if arg3:find("Spear") ~= nil then
-						arg1.Current_Spear = nil
-						return
-					end
-					Effects_upvr_2.Slash(arg1, false, true)
-				end
-			end))
-			if arg3:find("Spear") ~= nil then
-				table.insert(module_upvr.Events, task.delay((arg2[3] - arg2[1]) / 60, function() -- Line 246
-					--[[ Upvalues[5]:
-						[1]: arg1 (copied, readonly)
-						[2]: Modules_3_upvr (copied, readonly)
-						[3]: module_upvr (copied, readonly)
-						[4]: Character_5_upvr (copied, readonly)
-						[5]: arg4 (copied, readonly)
-					]]
-					local Current_Spear = arg1.Current_Spear
-					if Current_Spear ~= nil then
-						arg1.Sides[Current_Spear.Side] = tick() + 1
-						local any_Fire_result1_2, any_Fire_result2_2, any_Fire_result3 = Modules_3_upvr.Spears.Fire(arg1, module_upvr.Rig(arg1, Character_5_upvr), arg4, Current_Spear)
-						if any_Fire_result1_2 ~= nil then
-							Modules_3_upvr.Spears.Event(arg1, any_Fire_result1_2, any_Fire_result2_2, any_Fire_result3)
-						end
-					end
-				end))
-			end
-		end
-		Slash_upvr_2.Wait = nil
-		if arg5 == nil then
-			var50 = module_upvr
-			i_3 = var50.Events
-			var50 = task.delay
-			var50 = var50(arg2[1] / 60 / Speed_upvw, function() -- Line 262
-				--[[ Upvalues[2]:
-					[1]: Slash_upvr_2 (readonly)
-					[2]: Continue_upvr (readonly)
-				]]
-				if Slash_upvr_2.Released == true then
-					Continue_upvr()
-				else
-					Slash_upvr_2.Wait = true
-				end
-			end)
-			table.insert(i_3, var50)
-		else
-			Continue_upvr()
-		end
-	end
-end
-function module_upvr.Blade_Drops(arg1) -- Line 268
-	local Effects_3 = arg1.Modules.Effects
-	local any_Invoke_result1 = arg1:Invoke("Blades", "Drop")
-	if any_Invoke_result1 ~= nil and 0 < #any_Invoke_result1 then
-		for _, v_2 in pairs(any_Invoke_result1) do
-			Effects_3.Sound(arg1, "Drop", v_2, nil, nil)
-		end
-	end
-end
-function module_upvr.Reload(arg1, arg2) -- Line 282
-	--[[ Upvalues[1]:
-		[1]: module_upvr (readonly)
-	]]
-	-- KONSTANTERROR: [0] 1. Error Block 1 start (CF ANALYSIS FAILED)
-	local _ = arg1.Modules
-	local _ = arg1.Cache
-	local _, _ = module_upvr.Blade_Check(arg1)
-	-- KONSTANTERROR: [0] 1. Error Block 1 end (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [27] 16. Error Block 2 start (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [27] 16. Error Block 2 end (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [31] 18. Error Block 3 start (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [31] 18. Error Block 3 end (CF ANALYSIS FAILED)
-end
-function module_upvr.Achievement(arg1) -- Line 328
-	--[[ Upvalues[1]:
-		[1]: module_upvr (readonly)
-	]]
-	if module_upvr.Off_Ground == true then
-		if module_upvr.Grounded == false then
-			module_upvr.Grounded = true
-			arg1:Send("S_Achievements", "Landed")
-		end
-	end
-end
-local new_upvr_result1_upvr = new_upvr(0.25, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-local function Hook(arg1, arg2, arg3, arg4) -- Line 334
-	--[[ Upvalues[5]:
-		[1]: module_upvr (readonly)
-		[2]: new_upvr_2 (readonly)
-		[3]: new_upvr_result1_upvr (readonly)
-		[4]: Angles_upvr (readonly)
-		[5]: new_upvr_3 (readonly)
-	]]
-	-- KONSTANTERROR: [0] 1. Error Block 1 start (CF ANALYSIS FAILED)
-	local _ = arg1.Modules
-	local Cache_14 = arg1.Cache
-	local _ = arg1.Services.W
-	local _ = Cache_14.Variables
-	-- KONSTANTERROR: [0] 1. Error Block 1 end (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [65] 38. Error Block 2 start (CF ANALYSIS FAILED)
+	module_upvr.Info(arg1, Missions_upvr_2[Prompt])
 	do
 		return
 	end
-	-- KONSTANTERROR: [65] 38. Error Block 2 end (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [66] 39. Error Block 3 start (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [66] 39. Error Block 3 end (CF ANALYSIS FAILED)
+	-- KONSTANTERROR: [130] 97. Error Block 46 end (CF ANALYSIS FAILED)
+	-- KONSTANTERROR: [257] 179. Error Block 63 start (CF ANALYSIS FAILED)
+	if arg2 == false then
+		Effects_2.Tween(arg1, Missions_upvr_2, "Missions_Out", {
+			BackgroundTransparency = 1;
+		}, 0.25)
+		task.wait(0.1)
+		local var57
+		if var57 == false then
+			var57 = module_upvr.Current_Close_Event
+			if var57 ~= nil then
+				var57 = module_upvr.Current_Close_Event:Disconnect
+				var57()
+				var57 = module_upvr
+				var57.Current_Close_Event = nil
+			end
+			var57 = pairs(module_upvr.Click_Events)
+			local pairs_result1_5_upvr, pairs_result2, pairs_result3_3 = pairs(module_upvr.Click_Events)
+			for _, v in pairs_result1_5_upvr, pairs_result2, pairs_result3_3 do
+				v:Disconnect()
+			end
+			pairs_result1_5_upvr = module_upvr
+			pairs_result1_5_upvr.Click_Events = {}
+			if module_upvr.Selected_Map.Name ~= nil then
+				pairs_result1_5_upvr = "Info"
+			else
+				pairs_result1_5_upvr = "Prompt"
+			end
+			local _ = {
+				GroupTransparency = 1;
+			}
+			if pairs_result1_5_upvr ~= "Prompt" then
+			end
+			if Events_7["Missions_"..pairs_result1_5_upvr.."_Closed"] == nil then
+				Events_7["Missions_"..pairs_result1_5_upvr.."_Closed"] = Effects_2.Tween(arg1, Missions_upvr_2[pairs_result1_5_upvr].Main, tostring("Missions_"..pairs_result1_5_upvr.."_Main_Out"), {
+					Size = new_upvr_2(0.85, 0, 0.85, 0);
+				}, 0.15).Completed:Connect(function() -- Line 155
+					--[[ Upvalues[3]:
+						[1]: module_upvr (copied, readonly)
+						[2]: Missions_upvr_2 (readonly)
+						[3]: pairs_result1_5_upvr (readonly)
+					]]
+					if module_upvr.Open == false and Missions_upvr_2[pairs_result1_5_upvr].Visible == true then
+						Missions_upvr_2.Visible = false
+						Missions_upvr_2[pairs_result1_5_upvr].Visible = false
+					end
+				end)
+			end
+		end
+	end
+	-- KONSTANTERROR: [257] 179. Error Block 63 end (CF ANALYSIS FAILED)
 end
-module_upvr.Hook = Hook
-function module_upvr.Swerve(arg1, arg2, arg3) -- Line 655
-	--[[ Upvalues[1]:
-		[1]: Angles_upvr (readonly)
+function module_upvr.Switch(arg1, arg2, arg3, arg4) -- Line 165
+	--[[ Upvalues[2]:
+		[1]: module_upvr (readonly)
+		[2]: new_upvr_2 (readonly)
 	]]
-	-- KONSTANTWARNING: Variable analysis failed. Output will have some incorrect variable assignments
-	local Cache_9 = arg1.Cache
-	local Effects = arg1.Modules.Effects
-	local Variables_13 = Cache_9.Variables
-	local var90 = arg2
-	local var91 = Variables_13[var90.."_Swerve"]
-	if arg3 == "Active" then
-		var90 = true
+	local Events = arg1.Events
+	local Effects_8 = arg1.Modules.Effects
+	local Tweens_2 = arg1.Cache.Tweens
+	local Prompt_2_upvr = arg2.Prompt
+	local var68_upvr = arg2[arg3]
+	if arg4 == true then
+		module_upvr.Current_Frame = var68_upvr.Name
+		if module_upvr.Current_Close_Event == nil then
+			module_upvr.Current_Close_Event = Effects_8.Tween(arg1, Prompt_2_upvr, "Missions_Prompt_Out", {
+				GroupTransparency = 1;
+			}, 0.15).Completed:Connect(function(arg1_2) -- Line 180
+				--[[ Upvalues[2]:
+					[1]: module_upvr (copied, readonly)
+					[2]: Prompt_2_upvr (readonly)
+				]]
+				if arg1_2.Name ~= "Completed" then
+				elseif module_upvr.Current_Frame ~= nil then
+					Prompt_2_upvr.Visible = false
+				end
+			end)
+		end
+		task.wait(0.1)
+		if module_upvr.Current_Frame ~= var68_upvr.Name then
+		else
+			var68_upvr.Visible = true
+			local var71 = Tweens_2[tostring("Missions_"..var68_upvr.Name.."_Out")]
+			if var71 ~= nil then
+				var71:Cancel()
+			end
+			local var72 = Tweens_2[tostring("Missions_"..var68_upvr.Name.."_Main_Out")]
+			if var72 ~= nil then
+				var72:Cancel()
+			end
+			Effects_8.Tween(arg1, var68_upvr, "Missions_"..var68_upvr.Name.."_In", {
+				GroupTransparency = 0;
+			}, 0.25)
+			Effects_8.Tween(arg1, var68_upvr.Main, "Missions_"..var68_upvr.Name.."_Main_In", {
+				Size = new_upvr_2(0.95, 0, 0.95, 0);
+			}, 0.25)
+			if var68_upvr.Name == "Missions" or var68_upvr.Name == "Raids" then
+				module_upvr.Update(arg1, arg2, var68_upvr, var68_upvr.Name)
+				return
+			end
+			module_upvr[var68_upvr.Name](arg1, arg2, var68_upvr)
+		end
+	end
+	module_upvr.Current_Frame = nil
+	Effects_8.Tween(arg1, var68_upvr, tostring("Missions_"..var68_upvr.Name.."_Out"), {
+		GroupTransparency = 1;
+	}, 0.15)
+	if Events["Mission_"..var68_upvr.Name.."_Closed"] == nil then
+		Events["Mission_"..var68_upvr.Name.."_Closed"] = Effects_8.Tween(arg1, var68_upvr.Main, tostring("Missions_"..var68_upvr.Name.."_Main_Out"), {
+			Size = new_upvr_2(0.85, 0, 0.85, 0);
+		}, 0.15).Completed:Connect(function(arg1_3) -- Line 209
+			--[[ Upvalues[2]:
+				[1]: module_upvr (copied, readonly)
+				[2]: var68_upvr (readonly)
+			]]
+			if arg1_3.Name ~= "Completed" then
+			elseif module_upvr.Current_Frame == nil then
+				var68_upvr.Visible = false
+			end
+		end)
+	end
+	task.wait(0.1)
+	if module_upvr.Current_Frame ~= nil then
 	else
-		var90 = false
-	end
-	local Left_Hook_2 = Variables_13.Left_Hook
-	local Right_Hook_3 = Variables_13.Right_Hook
-	if Left_Hook_2.State == true then
-		if Left_Hook_2.Destroying ~= false then
-		else
+		Prompt_2_upvr.Visible = true
+		if module_upvr.Current_Close_Event ~= nil then
+			module_upvr.Current_Close_Event:Disconnect()
+			module_upvr.Current_Close_Event = nil
 		end
+		Effects_8.Tween(arg1, Prompt_2_upvr, "Missions_Prompt_In", {
+			GroupTransparency = 0;
+		}, 0.25)
 	end
-	local var94 = false
-	if Right_Hook_3.State == true then
-		if Right_Hook_3.Destroying ~= false then
-			var94 = false
-		else
-			var94 = true
-		end
-	end
-	if var90 == true and (true == true or var94 == true) or Variables_13.Climbing.State == false then
-		if Variables_13.Near_Floor == false then
-			Effects.Burst(arg1, Angles_upvr(0, math.pi, 0))
-		end
-		Effects.Sound(arg1, "Swerve", Cache_9.Character.PrimaryPart, nil, nil)
-	end
-	var91.Started = var90
-	var91.State = var90
-	var91.Last = tick()
-	var91.Finished = var90
-	var91.Holding = var90
 end
-function module_upvr.Cancel_Actions(arg1, arg2) -- Line 686
+function module_upvr.Boost(arg1, arg2, arg3) -- Line 226
 	--[[ Upvalues[1]:
 		[1]: module_upvr (readonly)
 	]]
-	local Variables_12 = arg1.Cache.Variables
-	Variables_12.Land = false
-	Variables_12.Flipping = false
-	Variables_12.Jump_Flip = false
-	for _, v_3 in pairs(arg2) do
-		Variables_12[v_3].State = false
-		Variables_12[v_3].Lose = true
-		if v_3 == "Backflip" or v_3 == "Leftflip" or v_3 == "Rightflip" then
-			module_upvr.Flip_Type = nil
+	local W = arg1.Services.W
+	local Boosted_Boost = W:GetAttribute("Boosted_Boost")
+	local Boosted_Timer_3 = W:GetAttribute("Boosted_Timer")
+	if arg3 == nil then
+		for i_2, v_2 in pairs(arg2.Main.Maps.Maps:GetChildren()) do
+			if v_2:IsA("Frame") == true then
+				local string_split_result1 = string.split(v_2.Name, '_')
+				if unpack(string_split_result1) ~= W:GetAttribute("Boosted_Map") then
+					string_split_result1 = false
+				else
+					string_split_result1 = true
+				end
+				v_2.Boost.Visible = string_split_result1
+				if string_split_result1 == true then
+					if Boosted_Timer_3 == nil or Boosted_Timer_3 < 0 then
+						Boosted_Timer_3 = 0
+					end
+					Boosted_Timer_3 -= (Boosted_Timer_3 - Boosted_Timer_3 % 60) / 60 * 60
+					Boosted_Timer_3 = string.format("%02i", Boosted_Timer_3)
+					v_2.Boost.Title.Text = string.upper(Boosted_Boost.." BOOST ("..string.format("%02i", (Boosted_Timer_3 - Boosted_Timer_3 % 60) / 60)..':'..Boosted_Timer_3..')')
+					v_2.Boost.Title.Gradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), ColorSequenceKeypoint.new(1, module_upvr.Boost_Colours[Boosted_Boost])})
+					module_upvr.Map_Boost_Object = v_2
+				end
+			end
+		end
+		local Map = module_upvr.Map
+		if Map.Name ~= nil and Map.Difficulty ~= nil then
+			v_2 = arg2.Main.Info.Main
+			i_2 = v_2.Items
+			v_2 = Map.Name
+			arg1.Modules.Rewards.Update(arg1, i_2, v_2, Map.Difficulty, Map.Type)
 		end
 	end
 end
-function module_upvr.Boost(arg1, arg2) -- Line 706
+function module_upvr.Update(arg1, arg2, arg3, arg4) -- Line 288
+	--[[ Upvalues[1]:
+		[1]: module_upvr (readonly)
+	]]
+	local Events_4 = arg1.Events
+	local W_2_upvr = arg1.Services.W
+	local Effects_7 = arg1.Modules.Effects
+	if module_upvr.Map.Type ~= arg4 then
+		local var121 = module_upvr
+		if arg4 == "Missions" then
+			var121 = "Shiganshina"
+		else
+			var121 = "Trost"
+		end
+		module_upvr.Map.Name = var121
+		var121.Map.Type = arg4
+	end
+	for _, v_3 in pairs(arg3.Main.Maps.Maps:GetChildren()) do
+		if v_3:IsA("Frame") == true then
+			Effects_7.Hover(arg1, v_3, arg3, module_upvr, "Mission", true, v_3.Icon)
+			if v_3.Name == tostring(module_upvr.Map.Name..'_'..arg4) then
+				module_upvr.Icon(arg1, v_3, arg3)
+			end
+		end
+	end
+	module_upvr.Difficulties(arg1, arg3, arg4)
+	local Info_5 = arg3.Main.Info
+	Effects_7.Hover(arg1, Info_5.Main.Buttons["M_Back_"..arg4], arg3, module_upvr, "Mission")
+	Effects_7.Hover(arg1, Info_5.Main.Buttons["Creation_"..arg4], arg3, module_upvr, "Mission")
+	if arg4 == "Missions" then
+		Info_5.Main.Visible = true
+		Info_5.Objectives.Visible = false
+		Info_5.Main.GroupTransparency = 0
+		Info_5.Objectives.GroupTransparency = 1
+		Effects_7.Hover(arg1, Info_5.Main.Buttons["Objectives_"..arg4], arg3, module_upvr, "Mission")
+		local tostring_result1 = tostring("Boosted_Map_Change_"..arg4)
+		local tostring_result1_3 = tostring("Boosted_Boost_Change_"..arg4)
+		local tostring_result1_5 = tostring("Boosted_Timer_Change_"..arg4)
+		if Events_4[tostring_result1] == nil then
+			Events_4[tostring_result1] = W_2_upvr:GetAttributeChangedSignal("Boosted_Map"):Connect(function() -- Line 324
+				--[[ Upvalues[3]:
+					[1]: module_upvr (copied, readonly)
+					[2]: arg1 (readonly)
+					[3]: arg3 (readonly)
+				]]
+				module_upvr.Boost(arg1, arg3)
+			end)
+		end
+		if Events_4[tostring_result1_3] == nil then
+			Events_4[tostring_result1_3] = W_2_upvr:GetAttributeChangedSignal("Boosted_Boost"):Connect(function() -- Line 330
+				--[[ Upvalues[3]:
+					[1]: module_upvr (copied, readonly)
+					[2]: arg1 (readonly)
+					[3]: arg3 (readonly)
+				]]
+				module_upvr.Boost(arg1, arg3)
+			end)
+			module_upvr.Boost(arg1, arg3)
+		end
+		if Events_4[tostring_result1_5] == nil then
+			Events_4[tostring_result1_5] = W_2_upvr:GetAttributeChangedSignal("Boosted_Timer"):Connect(function() -- Line 338
+				--[[ Upvalues[2]:
+					[1]: module_upvr (copied, readonly)
+					[2]: W_2_upvr (readonly)
+				]]
+				-- KONSTANTWARNING: Variable analysis failed. Output will have some incorrect variable assignments
+				local Map_Boost_Object = module_upvr.Map_Boost_Object
+				if Map_Boost_Object ~= nil then
+					local Boosted_Timer_2 = W_2_upvr:GetAttribute("Boosted_Timer")
+					if Boosted_Timer_2 == nil or Boosted_Timer_2 < 0 then
+					end
+					-- KONSTANTERROR: Expression was reused, decompilation is incorrect
+					local var134 = (0 - 0 % 60) / 60
+					-- KONSTANTERROR: Expression was reused, decompilation is incorrect
+					Map_Boost_Object.Boost.Title.Text = string.upper(W_2_upvr:GetAttribute("Boosted_Boost").." BOOST ("..string.format("%02i", var134)..':'..string.format("%02i", 0 - var134 * 60)..')')
+				end
+			end)
+		end
+	end
+end
+function module_upvr.Difficulties(arg1, arg2, arg3) -- Line 359
+	--[[ Upvalues[1]:
+		[1]: module_upvr (readonly)
+	]]
+	-- KONSTANTWARNING: Variable analysis failed. Output will have some incorrect variable assignments
+	local Modules_6 = arg1.Modules
+	local Effects_4 = Modules_6.Effects
+	local _, any_Get_Data_result2 = Modules_6.Update.Get_Data(arg1, true)
+	if any_Get_Data_result2 ~= nil then
+		local var147 = module_upvr.Unlocked[arg3]
+		if #var147 == 0 then
+			local var148_upvr = module_upvr.Difficulty_Indexes[arg3]
+			for i_4, _ in pairs(var148_upvr) do
+				table.insert(var147, i_4)
+				local var152
+			end
+			table.sort(module_upvr.Unlocked[arg3], function(arg1_4, arg2_2) -- Line 376
+				--[[ Upvalues[1]:
+					[1]: var148_upvr (readonly)
+				]]
+				local var154
+				if var148_upvr[arg1_4] >= var148_upvr[arg2_2] then
+					var154 = false
+				else
+					var154 = true
+				end
+				return var154
+			end)
+			Effects_4.Hover(arg1, arg2.Main.Info.Main.Difficulty["Backward_"..arg3], arg2, module_upvr, "Mission")
+			Effects_4.Hover(arg1, arg2.Main.Info.Main.Difficulty["Forward_"..arg3], arg2, module_upvr, "Mission")
+			local _1 = var152[1]
+			if _1 == nil then
+				_1 = "Hard"
+			end
+			module_upvr.Map.Difficulty = _1
+		else
+			var148_upvr = table.find(var152, module_upvr.Map.Difficulty)
+			if var148_upvr == nil then
+				module_upvr.Map.Difficulty = "Hard"
+			end
+		end
+		var148_upvr = module_upvr.Difficulty
+		var148_upvr(arg1, nil, arg2, arg3)
+	end
+end
+function module_upvr.Difficulty(arg1, arg2, arg3, arg4) -- Line 401
+	--[[ Upvalues[1]:
+		[1]: module_upvr (readonly)
+	]]
+	-- KONSTANTERROR: [0] 1. Error Block 51 start (CF ANALYSIS FAILED)
+	local _ = arg1.Modules
+	if arg2 ~= nil and arg2.Name:find("Backward") ~= nil then
+		-- KONSTANTWARNING: GOTO [42] #27
+	end
+	-- KONSTANTERROR: [0] 1. Error Block 51 end (CF ANALYSIS FAILED)
+	-- KONSTANTERROR: [29] 18. Error Block 52 start (CF ANALYSIS FAILED)
+	if arg2 ~= nil and arg2.Name:find("Forward") ~= nil then
+	else
+	end
+	local _, _, _ = pairs(module_upvr.Unlocked[module_upvr.Map.Type])
+	-- KONSTANTERROR: [29] 18. Error Block 52 end (CF ANALYSIS FAILED)
+end
+function module_upvr.Icon(arg1, arg2, arg3, arg4) -- Line 463
+	--[[ Upvalues[1]:
+		[1]: module_upvr (readonly)
+	]]
+	local var160
+	if module_upvr.Map_Object ~= arg2 then
+		local Modules = arg1.Modules
+		local Effects_11 = Modules.Effects
+		var160 = module_upvr
+		var160 = arg2.Name
+		local string_gsub_result1 = string.gsub(var160, tostring('_'..arg3.Name), "")
+		var160 = module_upvr.Map_Object
+		if var160 ~= nil then
+			var160 = Effects_11.Tween
+			var160(arg1, module_upvr.Map_Object.Icon.Stroke, tostring(module_upvr.Map_Object.Name.."_Stroke_Out_"), {
+				Transparency = 1;
+			}, 0.25)
+		end
+		var160 = module_upvr
+		var160.Map_Object = arg2
+		var160 = module_upvr.Boost
+		var160(arg1, arg3, true)
+		var160 = Effects_11.Tween
+		var160(arg1, arg2.Icon.Stroke, tostring(arg2.Name.."_Stroke_In_"), {
+			Transparency = 0;
+		}, 0.25)
+		var160 = module_upvr.Map
+		var160.Name = string_gsub_result1
+		var160 = module_upvr.Map
+		var160.Objective = "Skirmish"
+		local function INLINED() -- Internal function, doesn't exist in bytecode
+			var160 = module_upvr.Raids[string_gsub_result1]
+			return var160
+		end
+		if var160.Map.Type ~= "Raids" or not INLINED() then
+			var160 = string_gsub_result1
+		end
+		arg3.Main.Info.Map.Text = string.upper(var160)
+		arg3.Main.Info.Icon.Image = tostring(arg1.Prefix..module_upvr.Icons[var160])
+		if arg4 == true then
+			Modules.Rewards.Update(arg1, arg3.Main.Info.Main.Items, module_upvr.Map.Name, module_upvr.Map.Difficulty, module_upvr.Map.Type)
+		end
+		if module_upvr.Objectives_Open == true then
+			module_upvr.Objectives(arg1, arg3.Main.Info, true)
+		end
+	end
+end
+function module_upvr.Create_M_Back(arg1, arg2) -- Line 501
+	--[[ Upvalues[1]:
+		[1]: module_upvr (readonly)
+	]]
+	if module_upvr.Modifiers_Open == true then
+	else
+		module_upvr.Switch(arg1, arg2.Parent, module_upvr.Map.Type, false)
+	end
+end
+function module_upvr.Create_Creation(arg1, arg2) -- Line 507
+	--[[ Upvalues[2]:
+		[1]: module_upvr (readonly)
+		[2]: new_upvr_2 (readonly)
+	]]
+	if module_upvr.Current_Frame ~= nil then
+		local any_Invoke_result1_2 = arg1:Invoke("S_Missions", "Create", module_upvr.Map)
+		if any_Invoke_result1_2 ~= nil then
+			arg2.GroupTransparency = 1
+			arg2.Visible = false
+			arg2.Main.Size = new_upvr_2(0.85, 0, 0.85, 0)
+			if module_upvr.Current_Close_Event ~= nil then
+				module_upvr.Current_Close_Event:Disconnect()
+				module_upvr.Current_Close_Event = nil
+			end
+			module_upvr.Selected_Map = {
+				Name = any_Invoke_result1_2.Name;
+				Difficulty = any_Invoke_result1_2.Value;
+				Type = any_Invoke_result1_2:GetAttribute("Type");
+				Limit = any_Invoke_result1_2:GetAttribute("Limit");
+				Object = any_Invoke_result1_2;
+			}
+			module_upvr.Fade(arg1, true)
+		end
+	end
+end
+function module_upvr.Create_Objectives(arg1, arg2) -- Line 523
+	--[[ Upvalues[1]:
+		[1]: module_upvr (readonly)
+	]]
+	if arg2.Name ~= "Missions" then
+	else
+		local Events_2 = arg1.Events
+		local Effects_5_upvr = arg1.Modules.Effects
+		local Info_9_upvw = arg2.Main.Info
+		module_upvr.Objectives_Open = true
+		if Events_2.Objectives_Open == nil then
+			Events_2.Objectives_Open = Effects_5_upvr.Tween(arg1, Info_9_upvw.Main, "Mission_Create_Out", {
+				GroupTransparency = 1;
+			}).Completed:Connect(function(arg1_5) -- Line 539
+				--[[ Upvalues[5]:
+					[1]: module_upvr (copied, readonly)
+					[2]: Info_9_upvw (read and write)
+					[3]: Effects_5_upvr (readonly)
+					[4]: arg1 (readonly)
+					[5]: arg2 (readonly)
+				]]
+				if arg1_5.Name == "Completed" and module_upvr.Objectives_Open == true then
+					Info_9_upvw.Main.Visible = false
+					Info_9_upvw.Objectives.Visible = true
+					Effects_5_upvr.Tween(arg1, Info_9_upvw.Objectives, "Mission_Objectives_In", {
+						GroupTransparency = 0;
+					})
+					Effects_5_upvr.Hover(arg1, Info_9_upvw.Objectives.Objectives_Buttons.Objectives_Return, arg2, module_upvr, "Mission")
+					module_upvr.Objectives(arg1, Info_9_upvw)
+				end
+			end)
+		end
+	end
+end
+local fromRGB_upvr = Color3.fromRGB
+function module_upvr.Objectives(arg1, arg2, arg3) -- Line 553
 	--[[ Upvalues[3]:
-		[1]: Angles_upvr (readonly)
-		[2]: module_upvr (readonly)
-		[3]: new_upvr (readonly)
+		[1]: module_upvr (readonly)
+		[2]: fromRGB_upvr (readonly)
+		[3]: new_upvr_2 (readonly)
+	]]
+	if module_upvr.Current_Frame ~= nil then
+		if module_upvr.Current_Frame == "Missions" then
+			local Modules_9 = arg1.Modules
+			local Effects_6 = Modules_9.Effects
+			local var185 = Modules_9.Objectives[module_upvr.Map.Name]
+			for _, v_5 in pairs(module_upvr.Objective_Events) do
+				v_5:Disconnect()
+			end
+			module_upvr.Objective_Events = {}
+			for i_6, v_6 in pairs(arg2.Objectives.Main:GetChildren()) do
+				if v_6:IsA("UIListLayout") == false then
+					v_6:Destroy()
+				end
+			end
+			if arg3 == true then
+				v_6 = module_upvr
+				i_6 = v_6.Map
+				if table.find(var185, i_6.Objective) == nil then
+					module_upvr.Map.Objective = "Skirmish"
+				end
+				arg2.Objectives.GroupTransparency = 1
+			end
+			for i_7, v_7 in pairs(var185) do
+				local clone = arg1:Get("Asset", {"Effects", "Objective"}):Clone()
+				clone.Name = v_7
+				clone.Selected.Title.Text = string.upper(v_7)
+				clone.Selected.Description.Text = Modules_9.Descriptions.Objectives[v_7]
+				clone.Parent = arg2.Objectives.Main
+				Effects_6.Hover(arg1, clone, arg2, module_upvr, "Objective", nil, nil, true, nil, module_upvr.Objective_Events)
+				if v_7 == module_upvr.Map.Objective then
+					clone.GroupColor3 = fromRGB_upvr(255, 255, 255)
+					clone.Size = new_upvr_2(0.315, 0, 0.892, 0)
+				end
+			end
+			if arg3 == true then
+				i_7 = "Objectives_Visibility"
+				v_7 = {}
+				v_7.GroupTransparency = 0
+				Effects_6.Tween(arg1, arg2.Objectives, i_7, v_7, 0.2, nil, nil, nil, nil, nil, true)
+			end
+		end
+	end
+end
+function module_upvr.Objective(arg1, arg2, arg3) -- Line 587
+	--[[ Upvalues[1]:
+		[1]: module_upvr (readonly)
+	]]
+	local Modules_3 = arg1.Modules
+	local Effects_9 = Modules_3.Effects
+	local Tweens = Modules_3.Tweens
+	local Objective_2 = module_upvr.Map.Objective
+	if Objective_2 ~= arg2.Name then
+		module_upvr.Map.Objective = arg2.Name
+		local SOME = arg3.Objectives.Main:FindFirstChild(Objective_2)
+		if SOME ~= nil then
+			Tweens.Tween(arg1, Effects_9, SOME, module_upvr, nil, "Out", true)
+		end
+		Tweens.Tween(arg1, Effects_9, arg2, module_upvr, nil, "In", true)
+	end
+end
+function module_upvr.Update_Empty(arg1, arg2) -- Line 605
+	local var202
+	if #arg2:GetChildren() > 2 then
+		var202 = false
+	else
+		var202 = true
+	end
+	arg2.Empty.Visible = var202
+	if var202 == true then
+		arg2.Empty.Label.TextTransparency = 1
+		arg1.Modules.Effects.Tween(arg1, arg2.Empty.Label, "Empty_In", {
+			TextTransparency = 0;
+		}, 0.35, nil, nil, nil, nil, nil, true)
+	end
+end
+function module_upvr.Create_Template(arg1, arg2, arg3, arg4) -- Line 621
+	--[[ Upvalues[1]:
+		[1]: module_upvr (readonly)
 	]]
 	-- KONSTANTERROR: [0] 1. Error Block 1 start (CF ANALYSIS FAILED)
-	local Left_Hook_6 = arg1.Cache.Variables.Left_Hook
+	local var204
 	-- KONSTANTERROR: [0] 1. Error Block 1 end (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [27] 15. Error Block 62 start (CF ANALYSIS FAILED)
-	if Left_Hook_6.Destroying ~= false then
-	else
+	-- KONSTANTERROR: [13] 8. Error Block 25 start (CF ANALYSIS FAILED)
+	var204 = "Leader"
+	var204 = "Asset"
+	local clone_3 = arg1:Get(var204, {"Effects", "Mission"}):Clone()
+	var204 = tostring(arg2.Name.."_Lobby_Template")
+	clone_3.Name = var204
+	local function INLINED_2() -- Internal function, doesn't exist in bytecode
+		var204 = module_upvr.Raids[arg2.Name]
+		return var204
 	end
-	-- KONSTANTERROR: [27] 15. Error Block 62 end (CF ANALYSIS FAILED)
-end
-function module_upvr.End_Climb(arg1) -- Line 767
-	if arg1.Cache.Variables.Climbing.State == true then
-		arg1.Modules.Climb.End(arg1)
+	if arg2:GetAttribute("Type") ~= "Raids" or not INLINED_2() then
+		var204 = arg2.Name
 	end
+	clone_3.Map.Text = string.upper(var204)
+	clone_3.Icon.Image = tostring(arg1.Prefix..module_upvr.Icons[var204])
+	clone_3.Difficulty.Text = string.upper(arg2.Value)
+	clone_3.Difficulty.TextColor3 = module_upvr.Colours[arg2.Value]
+	if arg2:GetAttribute("Objective") then
+		clone_3.Objective.Text = string.upper(arg2:GetAttribute("Objective"))
+		-- KONSTANTWARNING: GOTO [123] #82
+	end
+	-- KONSTANTERROR: [13] 8. Error Block 25 end (CF ANALYSIS FAILED)
 end
-function module_upvr.Enable_Flip(arg1, arg2, arg3, arg4, arg5, arg6, arg7) -- Line 779
+function module_upvr.Lobbies(arg1, arg2, arg3) -- Line 697
 	--[[ Upvalues[1]:
 		[1]: module_upvr (readonly)
 	]]
 	-- KONSTANTWARNING: Variable analysis failed. Output will have some incorrect variable assignments
-	local var104 = false
-	local Last_Flip_upvr = module_upvr.Last_Flip
-	local var106
-	local function INLINED_3() -- Internal function, doesn't exist in bytecode
-		local HUD_upvr = Modules_2.HUD
-		var106 = arg1.Artifacts
-		local Stats = arg1.Stats
-		local Modules_2 = arg1.Modules
-		return module_upvr.Reduced_Gas(arg1, arg6, true) == true
-	end
-	if Last_Flip_upvr.Type == "" or Last_Flip_upvr.Type == arg2 and Last_Flip_upvr.Amount < arg3 or Last_Flip_upvr.Cooldown == false and INLINED_3() then
-		Last_Flip_upvr.Type = arg2
-		Last_Flip_upvr.Amount += 1
-		Last_Flip_upvr.Cooldown = true
-		if table.find(var106.Equipped, "Scarf") ~= nil then
-			if arg4 ~= nil then
+	if module_upvr.Open == true then
+		local Missions = arg1.Services.RepS.Missions
+		arg1.Modules.Effects.Hover(arg1, arg3.Main.Maps.Lobbies_Closing, arg2, module_upvr, "Mission")
+		local Inner = arg3.Main.Maps.Maps.Inner
+		module_upvr.Update_Empty(arg1, Inner)
+		if module_upvr.Updated == false then
+			module_upvr.Updated = true
+			for _, v_8 in pairs(Missions:GetChildren()) do
+				module_upvr.Create_Template(arg1, v_8, Inner)
+				local var220_upvr
 			end
-		end
-		if Last_Flip_upvr.Amount < arg3 then
-			task.delay(arg4 * 0.8, function() -- Line 797
+			arg1.Events.Map_Update = Missions.ChildAdded:Connect(function(arg1_6) -- Line 720
 				--[[ Upvalues[3]:
-					[1]: Last_Flip_upvr (readonly)
-					[2]: HUD_upvr (readonly)
-					[3]: arg1 (readonly)
+					[1]: module_upvr (copied, readonly)
+					[2]: arg1 (readonly)
+					[3]: var220_upvr (readonly)
 				]]
-				Last_Flip_upvr.Cooldown = false
-				HUD_upvr.Boost(arg1, "No_Cooldown")
+				task.wait(0.5)
+				module_upvr.Create_Template(arg1, arg1_6, var220_upvr, true)
 			end)
-			local Amount_upvr = Last_Flip_upvr.Amount
-			task.delay(arg5 * 0.8, function() -- Line 803
-				--[[ Upvalues[4]:
-					[1]: Last_Flip_upvr (readonly)
-					[2]: arg2 (readonly)
-					[3]: Amount_upvr (readonly)
-					[4]: module_upvr (copied, readonly)
-				]]
-				if Last_Flip_upvr.Type == arg2 and Last_Flip_upvr.Amount == Amount_upvr then
-					Last_Flip_upvr.Type = ""
-					Last_Flip_upvr.Amount = 0
-					Last_Flip_upvr.Cooldown = false
-					module_upvr.Off_Ground = true
-				end
-			end)
-		else
-			Amount_upvr = task.delay
-			-- KONSTANTERROR: Expression was reused, decompilation is incorrect
-			Amount_upvr(arg5 * 0.8, function() -- Line 810
-				--[[ Upvalues[4]:
-					[1]: Last_Flip_upvr (readonly)
-					[2]: HUD_upvr (readonly)
-					[3]: arg1 (readonly)
-					[4]: module_upvr (copied, readonly)
-				]]
-				Last_Flip_upvr.Type = ""
-				Last_Flip_upvr.Amount = 0
-				Last_Flip_upvr.Cooldown = false
-				HUD_upvr.Boost(arg1, "No_Cooldown")
-				module_upvr.Off_Ground = true
-			end)
-		end
-		var104 = true
-		Amount_upvr = HUD_upvr.Boost
-		Amount_upvr(arg1, "Cooldown")
-		Amount_upvr = table.find(Stats.Talents, "16")
-		if Amount_upvr ~= nil then
-			Amount_upvr = task.defer
-			local Effects_upvr = Modules_2.Effects
-			Amount_upvr(function() -- Line 818
-				--[[ Upvalues[3]:
-					[1]: arg1 (readonly)
-					[2]: arg7 (readonly)
-					[3]: Effects_upvr (readonly)
-				]]
-				if arg1:Invoke("Talents", "Flashstep", arg7) == true then
-					Effects_upvr.Flashstep(arg1, arg7)
-				end
-			end)
-		end
-		Amount_upvr = table.find(Stats.Passive_Perks, "Black Flash")
-		if Amount_upvr ~= nil then
-			Amount_upvr = arg1:Send
-			Amount_upvr("S_Perks", "Black_Flash", arg7)
-			return var104
 		end
 	end
-	return var104
 end
-function module_upvr.Mega_Boost(arg1) -- Line 833
+function module_upvr.Join(arg1, arg2) -- Line 729
 	--[[ Upvalues[2]:
-		[1]: module_upvr (readonly)
-		[2]: Angles_upvr (readonly)
-	]]
-	local Cache_7 = arg1.Cache
-	local Effects_2_upvr = arg1.Modules.Effects
-	local Variables_11_upvr = Cache_7.Variables
-	local _ = Cache_7.Objects
-	local Mega_Boosting_3_upvr = Variables_11_upvr.Mega_Boosting
-	if Mega_Boosting_3_upvr.State == false and module_upvr.Enable_Flip(arg1, "Mega_Boost", 1 + arg1.Stats.Boost_Dashes, 0.5, 2.25, module_upvr.Usage.Mega_Boost, 0.5) == true then
-		module_upvr.End_Climb(arg1)
-		module_upvr.Hook(arg1, "Left", "Passive")
-		module_upvr.Hook(arg1, "Right", "Passive")
-		Variables_11_upvr.Sliding.State = false
-		Variables_11_upvr.Rolling.State = false
-		Variables_11_upvr.Unhook_Type = ""
-		Variables_11_upvr.Speedlines.Mega_Boost = true
-		Variables_11_upvr.Movement = true
-		Mega_Boosting_3_upvr.State = true
-		Mega_Boosting_3_upvr.Last = tick()
-		Mega_Boosting_3_upvr.Lose = false
-		module_upvr.Cancel_Actions(arg1, {"Flip"})
-		Effects_2_upvr.Mega_Boost = true
-		Effects_2_upvr.Burst(arg1, Angles_upvr(0, (math.pi/2), 0))
-		arg1:Send("S_Objectives", "Boost")
-		Effects_2_upvr.Sound(arg1, "Mega_Boost", Cache_7.Character.PrimaryPart, nil, nil)
-		task.delay(0.45, function() -- Line 873
-			--[[ Upvalues[1]:
-				[1]: Effects_2_upvr (readonly)
-			]]
-			Effects_2_upvr.Mega_Boost = false
-		end)
-		task.delay(0.5, function() -- Line 877
-			--[[ Upvalues[2]:
-				[1]: Mega_Boosting_3_upvr (readonly)
-				[2]: Variables_11_upvr (readonly)
-			]]
-			Mega_Boosting_3_upvr.Lose = true
-			task.delay(0.175, function() -- Line 880
-				--[[ Upvalues[1]:
-					[1]: Variables_11_upvr (copied, readonly)
-				]]
-				Variables_11_upvr.Speedlines.Mega_Boost = false
-			end)
-		end)
-	end
-end
-local var125_upvw
-function module_upvr.M1(arg1, arg2) -- Line 893
-	--[[ Upvalues[4]:
-		[1]: module_upvr (readonly)
-		[2]: new_upvr_3 (readonly)
-		[3]: new_upvr_2 (readonly)
-		[4]: var125_upvw (read and write)
-	]]
-	-- KONSTANTWARNING: Variable analysis failed. Output will have some incorrect variable assignments
-	-- KONSTANTERROR: [0] 1. Error Block 87 start (CF ANALYSIS FAILED)
-	local Modules_6 = arg1.Modules
-	local Stats_2 = arg1.Stats
-	local Cache_8 = arg1.Cache
-	local Events_2 = arg1.Events
-	local Weapon_2 = arg1.Weapon
-	local Shift_2 = Modules_6.Shift
-	local Zones_2 = Modules_6.Zones
-	local Character_6_upvr = Cache_8.Character
-	local Variables_5 = Cache_8.Variables
-	local Slash_upvr = Variables_5.Slash
-	local Heavy_2 = Variables_5.Heavy
-	local var189 = Slash_upvr.Combo + 1
-	local var190 = "ThrowStage"
-	local var191
-	if Character_6_upvr:GetAttribute(var190) or Events_2.Spear_Stepped ~= nil or Events_2.Spear_Stepped_2 ~= nil then return end
-	-- KONSTANTERROR: [0] 1. Error Block 87 end (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [49] 28. Error Block 7 start (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [49] 28. Error Block 7 end (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [57] 32. Error Block 9 start (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [57] 32. Error Block 9 end (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [61] 34. Error Block 99 start (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [61] 34. Error Block 99 end (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [69] 38. Error Block 13 start (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [69] 38. Error Block 13 end (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [73] 40. Error Block 98 start (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [73] 40. Error Block 98 end (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [167] 106. Error Block 125 start (CF ANALYSIS FAILED)
-	local var192
-	if 3 < var189 then
-		var191 = 1
-	else
-		var191 = var189
-	end
-	local var193 = var191
-	if var193 == 3 then
-		var191 = 0
-		Slash_upvr.Combo = var191
-		Slash_upvr.Cooldown = true
-		var191 = Character_6_upvr:GetAttribute("Type")
-		if var191 then
-			var191 = Character_6_upvr:GetAttribute("Type")
-			if var191 == "Female_Titan" then
-				var192 = 0.5
-			end
-		end
-		var191 = task.delay
-		var191(var192, function() -- Line 941
-			--[[ Upvalues[1]:
-				[1]: Slash_upvr (readonly)
-			]]
-			Slash_upvr.Cooldown = false
-		end)
-	end
-	var191 = nil
-	Heavy_2.Transition = var191
-	var191 = {}
-	Zones_2.Hit = var191
-	Zones_2.Hit_Building = false
-	var191 = tick()
-	Slash_upvr.Combo = var193
-	Slash_upvr.Last = var191
-	Slash_upvr.Slashing = true
-	Slash_upvr.Continue = nil
-	Slash_upvr.Type = var190
-	Slash_upvr.Released = false
-	Slash_upvr.Transition = nil
-	if arg2 == false then
-		if Weapon_2 == "Blades" then
-			var191 = Stats_2.Swing_Duration
-			local Founder_Will_2 = Character_6_upvr:GetAttribute("Founder_Will")
-			if Founder_Will_2 ~= nil then
-				local _, unpack_result2_2 = unpack(string.split(Founder_Will_2, ','))
-				if unpack_result2_2 ~= nil then
-					var191 += unpack_result2_2
-				end
-			end
-			Slash_upvr.Speed = (0.65) / (var191 / 100)
-		end
-		-- KONSTANTERROR: Expression was reused, decompilation is incorrect
-		module_upvr.Tasks(arg1, module_upvr.M1_Frames[tostring(var190.."_Hit_"..Slash_upvr.Combo)], tostring(var190.."_Hit_"..Slash_upvr.Combo), Character_6_upvr.PrimaryPart)
-		if Weapon_2 == "Blades" and table.find(Stats_2.Talents, '1') ~= nil or Weapon_2 == "Spears" and table.find(Stats_2.Talents, "30") ~= nil then
-			local tbl_3_upvw = {}
-			if Weapon_2 == "Blades" then
-				local _, _, any_Blade_Check_result3, any_Blade_Check_result4 = module_upvr.Blade_Check(arg1, Character_6_upvr)
-				if any_Blade_Check_result3 ~= nil and any_Blade_Check_result4 ~= nil then
-					tbl_3_upvw = {any_Blade_Check_result3, any_Blade_Check_result4}
-					-- KONSTANTWARNING: GOTO [344] #229
-				end
-			else
-				-- KONSTANTWARNING: Failed to evaluate expression, replaced with nil [321.20]
-				if nil ~= nil then
-					local new_upvr_3_result1 = new_upvr_3("Attachment")
-					new_upvr_3_result1.Name = 'A'
-					new_upvr_3_result1.CFrame = new_upvr_2(0, -1.9, 0)
-					-- KONSTANTERROR: Expression was reused, decompilation is incorrect
-					new_upvr_3_result1.Parent = nil
-					tbl_3_upvw = {new_upvr_3_result1}
-				end
-			end
-			module_upvr.Tips = {}
-			if 0 < #tbl_3_upvw then
-				task.synchronize()
-				for _, v_4 in pairs(tbl_3_upvw) do
-					local clone_2 = arg1:Get("Asset", {"Particles", "Blitzblade"}).Tip:Clone()
-					clone_2.Parent = v_4
-					table.insert(module_upvr.Tips, clone_2)
-					local var211_upvr
-				end
-				if var125_upvw ~= nil then
-					task.cancel(var125_upvw)
-				end
-				local Effects_6_upvr = Modules_6.Effects
-				var125_upvw = task.delay(2.5, function() -- Line 995
-					--[[ Upvalues[7]:
-						[1]: Slash_upvr (readonly)
-						[2]: Effects_6_upvr (readonly)
-						[3]: arg1 (readonly)
-						[4]: module_upvr (copied, readonly)
-						[5]: Character_6_upvr (readonly)
-						[6]: tbl_3_upvw (read and write)
-						[7]: var211_upvr (readonly)
-					]]
-					if Slash_upvr.Slashing == true then
-						if Slash_upvr.Released == false then
-							Effects_6_upvr.Charge(arg1, module_upvr, Character_6_upvr, tbl_3_upvw, var211_upvr)
-						end
-					end
-				end)
-			end
-			-- KONSTANTWARNING: GOTO [430] #293
-		end
-	else
-		Variables_5.Block = false
-		task.synchronize()
-		arg1:Send("Attacks", "Slash", true)
-		-- KONSTANTERROR: Expression was reused, decompilation is incorrect
-		Shift_2.Initiate_Hit(arg1, Character_6_upvr, Character_6_upvr.PrimaryPart, var193)
-	end
-	-- KONSTANTERROR: [167] 106. Error Block 125 end (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [430] 293. Error Block 78 start (CF ANALYSIS FAILED)
-	do
-		return true
-	end
-	-- KONSTANTERROR: [430] 293. Error Block 78 end (CF ANALYSIS FAILED)
-end
-function module_upvr.Flip(arg1, arg2, arg3) -- Line 1013
-	--[[ Upvalues[2]:
-		[1]: module_upvr (readonly)
-		[2]: Angles_upvr (readonly)
-	]]
-	-- KONSTANTWARNING: Variable analysis failed. Output will have some incorrect variable assignments
-	local Cache = arg1.Cache
-	local Effects_5_upvr = arg1.Modules.Effects
-	local Variables_2_upvr = Cache.Variables
-	local Left_Hook = Variables_2_upvr.Left_Hook
-	local Right_Hook_4 = Variables_2_upvr.Right_Hook
-	local Flip_4_upvr = Variables_2_upvr.Flip
-	local var220
-	if Left_Hook.State == true then
-		if Left_Hook.Destroying ~= false then
-			var220 = false
-		else
-			var220 = true
-		end
-	end
-	if Right_Hook_4.State == true then
-		if Right_Hook_4.Destroying ~= false then
-		else
-			local var221
-		end
-	end
-	if arg2 == "Backflip" then
-		var221 = 0.125
-	else
-		var221 = 0.3
-	end
-	local var222
-	local function INLINED_4() -- Internal function, doesn't exist in bytecode
-		var222 = module_upvr.Enable_Flip(arg1, arg2, 1, nil, 1.25, module_upvr.Usage.Flip, 0.5)
-		return var222 == true
-	end
-	if var222 == false and (arg3 == true or INLINED_4()) then
-		if arg2 == "Backflip" then
-			var222 = module_upvr.End_Climb
-			var222(arg1)
-		end
-		var222 = Variables_2_upvr.Sliding
-		var222.State = false
-		Variables_2_upvr.Rolling.State = false
-		var222 = Variables_2_upvr.Speedlines
-		Variables_2_upvr.Unhook_Type = ""
-		var222.Flip = true
-		Variables_2_upvr.Movement = true
-		var222 = module_upvr.Cancel_Actions
-		var222(arg1, {"Mega_Boosting"})
-		var222 = module_upvr
-		var222.Flip_Type = arg2
-		var222 = true
-		Flip_4_upvr.State = var222
-		local function INLINED_5() -- Internal function, doesn't exist in bytecode
-			var222 = Angles_upvr(0, (math.pi/2), 0)
-			return var222
-		end
-		if arg2 ~= "Backflip" or not INLINED_5() then
-			var222 = Angles_upvr(0, math.pi, 0)
-		end
-		Effects_5_upvr.Burst(arg1, var222)
-		arg1:Send("S_Objectives", "Boost")
-		Effects_5_upvr.Sound(arg1, "Swerve", Cache.Character.PrimaryPart, nil, nil)
-		if var220 == false and true == false then
-			Flip_4_upvr.Lose = false
-			task.delay(0.3333333333333333, function() -- Line 1057
-				--[[ Upvalues[1]:
-					[1]: Flip_4_upvr (readonly)
-				]]
-				Flip_4_upvr.Lose = true
-			end)
-		end
-		task.delay(var221 + 0.3333333333333333, function() -- Line 1062
-			--[[ Upvalues[1]:
-				[1]: Variables_2_upvr (readonly)
-			]]
-			Variables_2_upvr.Speedlines.Flip = false
-		end)
-		Effects_5_upvr.Flip = true
-		local delay = task.delay
-		delay((0.15) + (var221 - 0.05), function() -- Line 1068
-			--[[ Upvalues[1]:
-				[1]: Effects_5_upvr (readonly)
-			]]
-			Effects_5_upvr.Flip = false
-		end)
-		if arg2 == "Backflip" then
-			delay = 0.6666666666666666
-		else
-			delay = 1.5
-		end
-		task.delay(delay, function() -- Line 1076
-			--[[ Upvalues[2]:
-				[1]: Flip_4_upvr (readonly)
-				[2]: module_upvr (copied, readonly)
-			]]
-			Flip_4_upvr.State = false
-			Flip_4_upvr.Last = tick()
-			Flip_4_upvr.Adjusted = false
-			module_upvr.Flip_Type = nil
-		end)
-		Effects_5_upvr.Dust(arg1, false)
-	end
-end
-function module_upvr.Hook_Break(arg1) -- Line 1090
-	--[[ Upvalues[2]:
-		[1]: new_upvr_3 (readonly)
+		[1]: new_upvr_2 (readonly)
 		[2]: module_upvr (readonly)
 	]]
-	-- KONSTANTWARNING: Variable analysis failed. Output will have some incorrect variable assignments
-	local Cache_12 = arg1.Cache
-	local W_2_upvr = arg1.Services.W
-	local Variables_7_upvr = Cache_12.Variables
-	local PrimaryPart_6_upvr = Cache_12.Character.PrimaryPart
-	local Left_Hook_4 = Variables_7_upvr.Left_Hook
-	local Right_Hook_2 = Variables_7_upvr.Right_Hook
-	local Hook_Break_2_upvr = Variables_7_upvr.Hook_Break
-	local var236_upvr
-	if Left_Hook_4.State == true then
-		if Left_Hook_4.Destroying ~= false then
-			var236_upvr = false
+	local Notify = arg1.Modules.Notify
+	local Parent = arg2.Parent.Parent.Parent.Parent.Parent
+	local any_Invoke_result1, any_Invoke_result2 = arg1:Invoke("S_Missions", "Join", arg2:GetAttribute("ID"))
+	if any_Invoke_result1 ~= nil then
+		if any_Invoke_result1.Parent ~= nil then
+			Parent.GroupTransparency = 1
+			Parent.Visible = false
+			Parent.Main.Size = new_upvr_2(0.85, 0, 0.85, 0)
+			if module_upvr.Current_Close_Event ~= nil then
+				module_upvr.Current_Close_Event:Disconnect()
+				module_upvr.Current_Close_Event = nil
+			end
+			module_upvr.Selected_Map = {
+				Name = any_Invoke_result1.Name;
+				Difficulty = any_Invoke_result1.Value;
+				Type = any_Invoke_result1:GetAttribute("Type");
+				Limit = any_Invoke_result1:GetAttribute("Limit");
+				Object = any_Invoke_result1;
+			}
+			module_upvr.Fade(arg1, true)
 		else
-			var236_upvr = true
+			Notify.Fade(arg1, true, "Party has been disbanded!")
 		end
 	end
-	if Right_Hook_2.State == true then
-		if Right_Hook_2.Destroying ~= false then
-		else
-		end
-	end
-	local ODM_Range_upvr = arg1.Stats.ODM_Range
-	if Hook_Break_2_upvr.State == false and 1 <= tick() - Hook_Break_2_upvr.Last and Hook_Break_2_upvr.Hooking == false then
-		local var238_upvw = false
-		local var239_upvw = false
-		local function _(arg1_2) -- Line 1111, Named "Hook"
-			--[[ Upvalues[10]:
-				[1]: Hook_Break_2_upvr (readonly)
-				[2]: Variables_7_upvr (readonly)
-				[3]: W_2_upvr (readonly)
-				[4]: PrimaryPart_6_upvr (readonly)
-				[5]: ODM_Range_upvr (readonly)
-				[6]: new_upvr_3 (copied, readonly)
-				[7]: var238_upvw (read and write)
-				[8]: module_upvr (copied, readonly)
-				[9]: arg1 (readonly)
-				[10]: var239_upvw (read and write)
-			]]
-			if Hook_Break_2_upvr.Holding == true then
-				task.defer(function() -- Line 1113
-					--[[ Upvalues[11]:
-						[1]: Variables_7_upvr (copied, readonly)
-						[2]: arg1_2 (readonly)
-						[3]: W_2_upvr (copied, readonly)
-						[4]: PrimaryPart_6_upvr (copied, readonly)
-						[5]: ODM_Range_upvr (copied, readonly)
-						[6]: new_upvr_3 (copied, readonly)
-						[7]: Hook_Break_2_upvr (copied, readonly)
-						[8]: var238_upvw (copied, read and write)
-						[9]: module_upvr (copied, readonly)
-						[10]: arg1 (copied, readonly)
-						[11]: var239_upvw (copied, read and write)
-					]]
-					-- KONSTANTERROR: [0] 1. Error Block 1 start (CF ANALYSIS FAILED)
-					local var241 = arg1_2.."_Hook"
-					local var242 = Variables_7_upvr[var241]
-					-- KONSTANTERROR: [0] 1. Error Block 1 end (CF ANALYSIS FAILED)
-					-- KONSTANTERROR: [9] 8. Error Block 2 start (CF ANALYSIS FAILED)
-					-- KONSTANTERROR: [9] 8. Error Block 2 end (CF ANALYSIS FAILED)
-					-- KONSTANTERROR: [20] 17. Error Block 4 start (CF ANALYSIS FAILED)
-					-- KONSTANTERROR: [20] 17. Error Block 4 end (CF ANALYSIS FAILED)
-					-- KONSTANTERROR: [97] 69. Error Block 24 start (CF ANALYSIS FAILED)
-					if var238_upvw == true and var239_upvw == false then
-						var239_upvw = true
-						Hook_Break_2_upvr.Hooking = true
-						Hook_Break_2_upvr.State = true
-						Hook_Break_2_upvr.Last = tick()
-					end
-					-- KONSTANTERROR: [97] 69. Error Block 24 end (CF ANALYSIS FAILED)
-				end)
-			end
-		end
-		task.defer(function() -- Line 1169
-			--[[ Upvalues[11]:
-				[1]: var236_upvr (readonly)
-				[2]: module_upvr (copied, readonly)
-				[3]: arg1 (readonly)
-				[4]: Hook_Break_2_upvr (readonly)
-				[5]: Variables_7_upvr (readonly)
-				[6]: W_2_upvr (readonly)
-				[7]: PrimaryPart_6_upvr (readonly)
-				[8]: ODM_Range_upvr (readonly)
-				[9]: new_upvr_3 (copied, readonly)
-				[10]: var238_upvw (read and write)
-				[11]: var239_upvw (read and write)
-			]]
-			if var236_upvr == true then
-				module_upvr.Hook(arg1, "Left", "Passive")
-				task.delay(0.43333333333333335, function() -- Line 1173
-					--[[ Upvalues[10]:
-						[1]: Hook_Break_2_upvr (copied, readonly)
-						[2]: Variables_7_upvr (copied, readonly)
-						[3]: W_2_upvr (copied, readonly)
-						[4]: PrimaryPart_6_upvr (copied, readonly)
-						[5]: ODM_Range_upvr (copied, readonly)
-						[6]: new_upvr_3 (copied, readonly)
-						[7]: var238_upvw (copied, read and write)
-						[8]: module_upvr (copied, readonly)
-						[9]: arg1 (copied, readonly)
-						[10]: var239_upvw (copied, read and write)
-					]]
-					if Hook_Break_2_upvr.Holding == true then
-						if Hook_Break_2_upvr.Holding == true then
-							local const_string_upvr_4 = "Left"
-							task.defer(function() -- Line 1113
-								--[[ Upvalues[11]:
-									[1]: Variables_7_upvr (copied, readonly)
-									[2]: const_string_upvr_4 (readonly)
-									[3]: W_2_upvr (copied, readonly)
-									[4]: PrimaryPart_6_upvr (copied, readonly)
-									[5]: ODM_Range_upvr (copied, readonly)
-									[6]: new_upvr_3 (copied, readonly)
-									[7]: Hook_Break_2_upvr (copied, readonly)
-									[8]: var238_upvw (copied, read and write)
-									[9]: module_upvr (copied, readonly)
-									[10]: arg1 (copied, readonly)
-									[11]: var239_upvw (copied, read and write)
-								]]
-								-- KONSTANTERROR: [0] 1. Error Block 1 start (CF ANALYSIS FAILED)
-								local var247 = const_string_upvr_4.."_Hook"
-								local var248 = Variables_7_upvr[var247]
-								-- KONSTANTERROR: [0] 1. Error Block 1 end (CF ANALYSIS FAILED)
-								-- KONSTANTERROR: [9] 8. Error Block 2 start (CF ANALYSIS FAILED)
-								-- KONSTANTERROR: [9] 8. Error Block 2 end (CF ANALYSIS FAILED)
-								-- KONSTANTERROR: [20] 17. Error Block 4 start (CF ANALYSIS FAILED)
-								-- KONSTANTERROR: [20] 17. Error Block 4 end (CF ANALYSIS FAILED)
-								-- KONSTANTERROR: [97] 69. Error Block 24 start (CF ANALYSIS FAILED)
-								if var238_upvw == true and var239_upvw == false then
-									var239_upvw = true
-									Hook_Break_2_upvr.Hooking = true
-									Hook_Break_2_upvr.State = true
-									Hook_Break_2_upvr.Last = tick()
-								end
-								-- KONSTANTERROR: [97] 69. Error Block 24 end (CF ANALYSIS FAILED)
-							end)
-						end
-					end
-				end)
-			elseif Hook_Break_2_upvr.Holding == true then
-				local const_string_upvr_2 = "Left"
-				task.defer(function() -- Line 1113
-					--[[ Upvalues[11]:
-						[1]: Variables_7_upvr (copied, readonly)
-						[2]: const_string_upvr_2 (readonly)
-						[3]: W_2_upvr (copied, readonly)
-						[4]: PrimaryPart_6_upvr (copied, readonly)
-						[5]: ODM_Range_upvr (copied, readonly)
-						[6]: new_upvr_3 (copied, readonly)
-						[7]: Hook_Break_2_upvr (copied, readonly)
-						[8]: var238_upvw (copied, read and write)
-						[9]: module_upvr (copied, readonly)
-						[10]: arg1 (copied, readonly)
-						[11]: var239_upvw (copied, read and write)
-					]]
-					-- KONSTANTERROR: [0] 1. Error Block 1 start (CF ANALYSIS FAILED)
-					local var251 = const_string_upvr_2.."_Hook"
-					local var252 = Variables_7_upvr[var251]
-					-- KONSTANTERROR: [0] 1. Error Block 1 end (CF ANALYSIS FAILED)
-					-- KONSTANTERROR: [9] 8. Error Block 2 start (CF ANALYSIS FAILED)
-					-- KONSTANTERROR: [9] 8. Error Block 2 end (CF ANALYSIS FAILED)
-					-- KONSTANTERROR: [20] 17. Error Block 4 start (CF ANALYSIS FAILED)
-					-- KONSTANTERROR: [20] 17. Error Block 4 end (CF ANALYSIS FAILED)
-					-- KONSTANTERROR: [97] 69. Error Block 24 start (CF ANALYSIS FAILED)
-					if var238_upvw == true and var239_upvw == false then
-						var239_upvw = true
-						Hook_Break_2_upvr.Hooking = true
-						Hook_Break_2_upvr.State = true
-						Hook_Break_2_upvr.Last = tick()
-					end
-					-- KONSTANTERROR: [97] 69. Error Block 24 end (CF ANALYSIS FAILED)
-				end)
-			end
-		end)
-		local var254_upvr = true
-		task.defer(function() -- Line 1184
-			--[[ Upvalues[11]:
-				[1]: var254_upvr (readonly)
-				[2]: module_upvr (copied, readonly)
-				[3]: arg1 (readonly)
-				[4]: Hook_Break_2_upvr (readonly)
-				[5]: Variables_7_upvr (readonly)
-				[6]: W_2_upvr (readonly)
-				[7]: PrimaryPart_6_upvr (readonly)
-				[8]: ODM_Range_upvr (readonly)
-				[9]: new_upvr_3 (copied, readonly)
-				[10]: var238_upvw (read and write)
-				[11]: var239_upvw (read and write)
-			]]
-			if var254_upvr == true then
-				module_upvr.Hook(arg1, "Right", "Passive")
-				task.delay(0.43333333333333335, function() -- Line 1188
-					--[[ Upvalues[10]:
-						[1]: Hook_Break_2_upvr (copied, readonly)
-						[2]: Variables_7_upvr (copied, readonly)
-						[3]: W_2_upvr (copied, readonly)
-						[4]: PrimaryPart_6_upvr (copied, readonly)
-						[5]: ODM_Range_upvr (copied, readonly)
-						[6]: new_upvr_3 (copied, readonly)
-						[7]: var238_upvw (copied, read and write)
-						[8]: module_upvr (copied, readonly)
-						[9]: arg1 (copied, readonly)
-						[10]: var239_upvw (copied, read and write)
-					]]
-					if Hook_Break_2_upvr.Holding == true then
-						if Hook_Break_2_upvr.Holding == true then
-							local const_string_upvr_3 = "Right"
-							task.defer(function() -- Line 1113
-								--[[ Upvalues[11]:
-									[1]: Variables_7_upvr (copied, readonly)
-									[2]: const_string_upvr_3 (readonly)
-									[3]: W_2_upvr (copied, readonly)
-									[4]: PrimaryPart_6_upvr (copied, readonly)
-									[5]: ODM_Range_upvr (copied, readonly)
-									[6]: new_upvr_3 (copied, readonly)
-									[7]: Hook_Break_2_upvr (copied, readonly)
-									[8]: var238_upvw (copied, read and write)
-									[9]: module_upvr (copied, readonly)
-									[10]: arg1 (copied, readonly)
-									[11]: var239_upvw (copied, read and write)
-								]]
-								-- KONSTANTERROR: [0] 1. Error Block 1 start (CF ANALYSIS FAILED)
-								local var258 = const_string_upvr_3.."_Hook"
-								local var259 = Variables_7_upvr[var258]
-								-- KONSTANTERROR: [0] 1. Error Block 1 end (CF ANALYSIS FAILED)
-								-- KONSTANTERROR: [9] 8. Error Block 2 start (CF ANALYSIS FAILED)
-								-- KONSTANTERROR: [9] 8. Error Block 2 end (CF ANALYSIS FAILED)
-								-- KONSTANTERROR: [20] 17. Error Block 4 start (CF ANALYSIS FAILED)
-								-- KONSTANTERROR: [20] 17. Error Block 4 end (CF ANALYSIS FAILED)
-								-- KONSTANTERROR: [97] 69. Error Block 24 start (CF ANALYSIS FAILED)
-								if var238_upvw == true and var239_upvw == false then
-									var239_upvw = true
-									Hook_Break_2_upvr.Hooking = true
-									Hook_Break_2_upvr.State = true
-									Hook_Break_2_upvr.Last = tick()
-								end
-								-- KONSTANTERROR: [97] 69. Error Block 24 end (CF ANALYSIS FAILED)
-							end)
-						end
-					end
-				end)
-			elseif Hook_Break_2_upvr.Holding == true then
-				local const_string_upvr = "Right"
-				task.defer(function() -- Line 1113
-					--[[ Upvalues[11]:
-						[1]: Variables_7_upvr (copied, readonly)
-						[2]: const_string_upvr (readonly)
-						[3]: W_2_upvr (copied, readonly)
-						[4]: PrimaryPart_6_upvr (copied, readonly)
-						[5]: ODM_Range_upvr (copied, readonly)
-						[6]: new_upvr_3 (copied, readonly)
-						[7]: Hook_Break_2_upvr (copied, readonly)
-						[8]: var238_upvw (copied, read and write)
-						[9]: module_upvr (copied, readonly)
-						[10]: arg1 (copied, readonly)
-						[11]: var239_upvw (copied, read and write)
-					]]
-					-- KONSTANTERROR: [0] 1. Error Block 1 start (CF ANALYSIS FAILED)
-					local var262 = const_string_upvr.."_Hook"
-					local var263 = Variables_7_upvr[var262]
-					-- KONSTANTERROR: [0] 1. Error Block 1 end (CF ANALYSIS FAILED)
-					-- KONSTANTERROR: [9] 8. Error Block 2 start (CF ANALYSIS FAILED)
-					-- KONSTANTERROR: [9] 8. Error Block 2 end (CF ANALYSIS FAILED)
-					-- KONSTANTERROR: [20] 17. Error Block 4 start (CF ANALYSIS FAILED)
-					-- KONSTANTERROR: [20] 17. Error Block 4 end (CF ANALYSIS FAILED)
-					-- KONSTANTERROR: [97] 69. Error Block 24 start (CF ANALYSIS FAILED)
-					if var238_upvw == true and var239_upvw == false then
-						var239_upvw = true
-						Hook_Break_2_upvr.Hooking = true
-						Hook_Break_2_upvr.State = true
-						Hook_Break_2_upvr.Last = tick()
-					end
-					-- KONSTANTERROR: [97] 69. Error Block 24 end (CF ANALYSIS FAILED)
-				end)
-			end
-		end)
+	if any_Invoke_result2 ~= nil then
+		Notify.Fade(arg1, true, any_Invoke_result2)
 	end
 end
-function module_upvr.Slide(arg1, arg2) -- Line 1201
-	--[[ Upvalues[3]:
+function module_upvr.Update_Screen(arg1) -- Line 761
+	--[[ Upvalues[1]:
 		[1]: module_upvr (readonly)
-		[2]: new_upvr_2 (readonly)
-		[3]: new_upvr_4 (readonly)
 	]]
-	local Cache_4 = arg1.Cache
-	local Variables = Cache_4.Variables
-	local PrimaryPart_7 = Cache_4.Character.PrimaryPart
-	if PrimaryPart_7 ~= nil then
-		local BV_2 = Cache_4.Objects.BV
-		Variables.Land = false
-		Variables.Sliding.State = true
-		Variables.Rolling.State = false
-		module_upvr.Moving_Magnitude = new_upvr_2(arg2, 0, 0)
-		BV_2.MaxForce = new_upvr_4(module_upvr.Max_Force.X, 0, module_upvr.Max_Force.Z)
-		BV_2.Velocity = PrimaryPart_7.CFrame.LookVector * arg2
-		arg1.Modules.Effects.Dust(arg1, false)
+	local Selected_Map = module_upvr.Selected_Map
+	local Cache = arg1.Cache
+	local Mission = Cache.Gear_Up.Mission
+	local Name_2 = Selected_Map.Name
+	local Difficulty_2 = Selected_Map.Difficulty
+	local Type = Selected_Map.Type
+	local Object = Selected_Map.Object
+	if Name_2 ~= nil and Difficulty_2 ~= nil then
+		local var242
+		if Type ~= nil and Object ~= nil then
+			var242 = "Leader"
+			local SOME_4 = Object:FindFirstChild(var242)
+			local var244 = false
+			if SOME_4 ~= nil then
+				var242 = SOME_4.Value
+				if var242 ~= Cache.Player.Name then
+					var244 = false
+				else
+					var244 = true
+				end
+			end
+			local function INLINED_4() -- Internal function, doesn't exist in bytecode
+				var242 = module_upvr.Raids[Name_2]
+				return var242
+			end
+			if Type ~= "Raids" or not INLINED_4() then
+				var242 = Name_2
+			end
+			Mission.Start.Visible = var244
+			Mission.Start.BackgroundTransparency = 0
+			Mission.Start.Title.TextTransparency = 0
+			Mission.Main.Interact.Title.TextTransparency = 1
+			Mission.Main.Interact.Title.TextTransparency = 1
+			Mission.Main.Icon.Image = tostring(arg1.Prefix..module_upvr.Icons[var242])
+			Mission.Info.Map.Text = string.upper(var242)
+			Mission.Info.Map.TextColor3 = module_upvr.Colours[Difficulty_2]
+			return
+		end
 	end
+	Mission.Start.Visible = false
+	Mission.Start.BackgroundTransparency = 1
+	Mission.Start.Title.TextTransparency = 1
+	Mission.Main.Interact.Title.TextTransparency = 0
+	Mission.Main.Interact.Title.TextTransparency = 0.5
+	Mission.Main.Icon.Image = ""
+	Mission.Info.Map.Text = "N/A"
+	Mission.Info.Map.TextColor3 = Color3.fromRGB(255, 255, 255)
 end
-function module_upvr.Roll(arg1, arg2) -- Line 1225
-	--[[ Upvalues[3]:
-		[1]: module_upvr (readonly)
-		[2]: new_upvr_2 (readonly)
-		[3]: new_upvr_4 (readonly)
-	]]
-	local Cache_3 = arg1.Cache
-	local Variables_9 = Cache_3.Variables
-	local BV = Cache_3.Objects.BV
-	Variables_9.Land = false
-	Variables_9.Sliding.State = false
-	Variables_9.Rolling.State = true
-	module_upvr.Moving_Magnitude = new_upvr_2(arg2, 0, 0)
-	BV.MaxForce = new_upvr_4(module_upvr.Max_Force.X, 0, module_upvr.Max_Force.Z)
-	BV.Velocity = Cache_3.Character.PrimaryPart.CFrame.LookVector * arg2
-	arg1.Modules.Effects.Dust(arg1, true)
-end
-function module_upvr.Constants(arg1, arg2, arg3, arg4, arg5, arg6, arg7) -- Line 1247
-	-- KONSTANTWARNING: Variable analysis failed. Output will have some incorrect variable assignments
-	local var271
-	local function INLINED_6() -- Internal function, doesn't exist in bytecode
-		var271 = arg6 * 1.1
-		return var271
-	end
-	if arg4 ~= true or not INLINED_6() then
-		var271 = arg6
-	end
-	if arg2 == true and arg3 == true then
-	elseif arg2 == true or arg3 == true then
-	end
-	if arg4 == true or arg2 == true and arg3 == true then
-		var271 = 1.75
-	else
-		var271 = 2
-		local var272
-	end
-	if arg2 == false and arg3 == false then
-		var272 = 0
-	else
-		var272 = (arg5) / (arg7 / 1.75) / var271
-	end
-	return var271, 5, var272
-end
-function module_upvr.Lerp(arg1, arg2, arg3, arg4, arg5) -- Line 1268
-	local Cache_11 = arg1.Cache
-	local Maths = arg1.Modules.Maths
-	local Coordinates = Cache_11.Coordinates
-	local Velocities_2 = Cache_11.Velocities
-	Velocities_2.Swerve = Maths.Lerp(Velocities_2.Swerve, arg3, math.min(arg2 * arg4, 1))
-	Coordinates.Tilt = Maths.Lerp(Coordinates.Tilt, arg5 / 1.5 * 0.7, math.min(arg2 * 3, 1))
-end
-function module_upvr.Physics(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) -- Line 1280
+function module_upvr.Reset(arg1, arg2) -- Line 794
 	--[[ Upvalues[2]:
-		[1]: module_upvr (readonly)
-		[2]: new_upvr_4 (readonly)
-	]]
-	-- KONSTANTWARNING: Variable analysis failed. Output will have some incorrect variable assignments
-	-- KONSTANTERROR: [0] 1. Error Block 88 start (CF ANALYSIS FAILED)
-	local Modules_4 = arg1.Modules
-	local Cache_6 = arg1.Cache
-	local Character_3 = Cache_6.Character
-	local Variables_6 = Cache_6.Variables
-	local Velocities = Cache_6.Velocities
-	local Humanoid = Character_3.Humanoid
-	local Left_Hook_5 = Variables_6.Left_Hook
-	local Right_Hook = Variables_6.Right_Hook
-	local Left_Swerve_2 = Variables_6.Left_Swerve
-	local Right_Swerve = Variables_6.Right_Swerve
-	local Flip_3 = Variables_6.Flip
-	local Boosting = Variables_6.Boosting
-	local Mega_Boosting_2 = Variables_6.Mega_Boosting
-	local Skill_Movement_2 = Variables_6.Skill_Movement
-	local var314
-	if Left_Hook_5.State == true then
-		var314 = false
-		if Left_Hook_5.Destroying == false then
-			if Left_Hook_5.Physics ~= true then
-				var314 = false
-			else
-				var314 = true
-			end
-		end
-	end
-	if Right_Hook.State == true then
-		if Right_Hook.Destroying == false then
-			if Right_Hook.Physics ~= true then
-				local _ = false
-				-- KONSTANTWARNING: Skipped task `defvar` above
-			else
-			end
-		end
-	end
-	local var316 = arg3 / 100
-	if Left_Swerve_2.State == true and Right_Swerve.State == false then
-		-- KONSTANTWARNING: GOTO [101] #60
-	end
-	-- KONSTANTERROR: [0] 1. Error Block 88 end (CF ANALYSIS FAILED)
-	-- KONSTANTERROR: [90] 53. Error Block 93 start (CF ANALYSIS FAILED)
-	local var317
-	if Right_Swerve.State == true and Left_Swerve_2.State == false then
-		var317 = 1
-	else
-		var317 = 0
-	end
-	Velocities.Target_Swerve = arg4 / 3 * var317
-	local any_Constants_result1, any_Constants_result2, any_Constants_result3_2 = module_upvr.Constants(arg1, var314, true, Boosting, Velocities.Swerve, Velocities.Target_Swerve, arg4)
-	module_upvr.Lerp(arg1, arg5, any_Constants_result1, any_Constants_result2, any_Constants_result3_2)
-	if Boosting == true then
-	else
-	end
-	if module_upvr.Escaped.Gained == false and Mega_Boosting_2.Lose == true then
-		if Skill_Movement_2.Lose == true then
-			if Flip_3.Lose ~= true then
-			else
-			end
-		end
-	end
-	local var321 = false
-	if 0 < Humanoid.Health then
-		if module_upvr.Escaped.State == true and module_upvr.Escaped.Gained == false then
-			module_upvr.Escaped.Gained = true
-			task.synchronize()
-			arg7.MaxForce = module_upvr.Max_Force
-			arg7.Velocity = new_upvr_4(0, arg4 / module_upvr.Escaped.Multiplier, 0)
-			arg7.Parent = Character_3.PrimaryPart
-			var321 = true
-		elseif Variables_6.Climbing.State == false then
-			local function INLINED_7() -- Internal function, doesn't exist in bytecode
-				-- KONSTANTERROR: Expression was reused, decompilation is incorrect
-				return true == true
-			end
-			if var314 == true or INLINED_7() then
-				-- KONSTANTERROR: Expression was reused, decompilation is incorrect (x2)
-				Modules_4.Hooked.Main(arg1, module_upvr, arg6, arg7, arg8, arg9, Modules_4.Climb, Variables_6, Character_3.PrimaryPart, Humanoid, Left_Hook_5, Right_Hook, Boosting, var314, true, var316, arg4, 0.03 * var316 * arg6, var317, 1)
-				var321 = true
-			elseif Mega_Boosting_2.State == true and Mega_Boosting_2.Lose == false or Skill_Movement_2.State == true and Skill_Movement_2.Lose == false then
-				-- KONSTANTERROR: Expression was reused, decompilation is incorrect
-				Modules_4.Momentum.Main(arg1, module_upvr, arg6, arg7, arg8, Character_3.PrimaryPart, Mega_Boosting_2, Skill_Movement_2, var316, arg4)
-				var321 = true
-			elseif Flip_3.State == true and Flip_3.Adjusted == false then
-				-- KONSTANTERROR: Expression was reused, decompilation is incorrect
-				Modules_4.Flip.Main(arg1, module_upvr, arg7, Flip_3, Character_3.PrimaryPart, arg4)
-				var321 = true
-			end
-		end
-	end
-	if var321 == false and true == true then
-		-- KONSTANTERROR: Expression was reused, decompilation is incorrect (x4)
-		Modules_4.Freefall.Main(arg1, module_upvr, arg6, arg7, arg8, arg9, Variables_6, Cache_6.Coordinates.Lock, Character_3.PrimaryPart, Humanoid, Boosting, Variables_6.Climbing, var316, arg4, 0.03 * var316 * arg6, 1)
-	end
-	-- KONSTANTERROR: [90] 53. Error Block 93 end (CF ANALYSIS FAILED)
-end
-function module_upvr.Fling(arg1, arg2, arg3, arg4) -- Line 1342
-	--[[ Upvalues[1]:
 		[1]: new_upvr_2 (readonly)
+		[2]: module_upvr (readonly)
 	]]
-	local Character = arg1.Cache.Character
-	if Character ~= nil then
-		local PrimaryPart_4 = Character.PrimaryPart
-		if arg2 ~= nil then
-			local PrimaryPart_3 = arg2.PrimaryPart
-			if PrimaryPart_3 ~= nil then
-				local any_GetScale_result1 = arg2:GetScale()
-				for i_8, v_5 in pairs(Character:GetChildren()) do
-					if v_5:IsA("BasePart") == true then
-						v_5.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-						v_5.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+	arg2.GroupTransparency = 1
+	arg2.Visible = false
+	arg2.Main.Size = new_upvr_2(0.85, 0, 0.85, 0)
+	module_upvr.Selected_Map = {
+		Name = nil;
+		Difficulty = nil;
+		Type = nil;
+		Limit = nil;
+		Object = nil;
+	}
+	if module_upvr.Object_Events ~= nil then
+		for _, v_9 in pairs(module_upvr.Object_Events) do
+			v_9:Disconnect()
+		end
+		module_upvr.Object_Events = nil
+	end
+	if module_upvr.Modifiers_Open == true then
+		local Info_4 = arg2.Main.Info
+		module_upvr.Modifiers_Open = false
+		Info_4.Main.Visible = true
+		Info_4.Modifiers.Visible = false
+		Info_4.Main.GroupTransparency = 0
+		Info_4.Modifiers.GroupTransparency = 1
+	end
+	if module_upvr.Open == true then
+		module_upvr.Fade(arg1, true)
+	end
+	module_upvr.Update_Screen(arg1)
+end
+function module_upvr.Info(arg1, arg2) -- Line 824
+	--[[ Upvalues[1]:
+		[1]: module_upvr (readonly)
+	]]
+	-- KONSTANTERROR: [0] 1. Error Block 72 start (CF ANALYSIS FAILED)
+	local Modules_8 = arg1.Modules
+	local Effects_upvr_4 = Modules_8.Effects
+	local Player_upvr = arg1.Cache.Player
+	local Info_3_upvr = arg2.Main.Info
+	local Selected_Map_2 = module_upvr.Selected_Map
+	local Object_5_upvr = Selected_Map_2.Object
+	for _, v_10 in pairs(module_upvr.Click_Events) do
+		v_10:Disconnect()
+	end
+	local var263 = module_upvr
+	var263.Click_Events = {}
+	-- KONSTANTERROR: [0] 1. Error Block 72 end (CF ANALYSIS FAILED)
+	-- KONSTANTERROR: [52] 30. Error Block 4 start (CF ANALYSIS FAILED)
+	-- KONSTANTERROR: [52] 30. Error Block 4 end (CF ANALYSIS FAILED)
+	-- KONSTANTERROR: [54] 31. Error Block 5 start (CF ANALYSIS FAILED)
+	-- KONSTANTERROR: [54] 31. Error Block 5 end (CF ANALYSIS FAILED)
+	-- KONSTANTERROR: [56] 32. Error Block 6 start (CF ANALYSIS FAILED)
+	-- KONSTANTERROR: [56] 32. Error Block 6 end (CF ANALYSIS FAILED)
+	-- KONSTANTERROR: [58] 33. Error Block 7 start (CF ANALYSIS FAILED)
+	-- KONSTANTERROR: [58] 33. Error Block 7 end (CF ANALYSIS FAILED)
+	Effects_upvr_4.Hover(arg1, Info_3_upvr.Main.Info_Buttons.Left, arg2, module_upvr, "Mission")
+	Effects_upvr_4.Hover(arg1, Info_3_upvr.Main.Info_Buttons.Begin, arg2, module_upvr, "Mission")
+	Effects_upvr_4.Hover(arg1, Info_3_upvr.Main.Info_Buttons.Modify, arg2, module_upvr, "Mission")
+	Effects_upvr_4.Hover(arg1, Info_3_upvr.Info_Close, arg2, module_upvr, "Mission")
+	Info_3_upvr.Main.Info_Buttons.Begin.Visible = var263
+	if module_upvr.Object_Events == nil then
+		local tbl = {}
+		local Modifiers_2_upvr = Modules_8.Modifiers
+		table.insert(tbl, Object_5_upvr:GetPropertyChangedSignal("Parent"):Connect(function() -- Line 936
+			--[[ Upvalues[4]:
+				[1]: Object_5_upvr (readonly)
+				[2]: module_upvr (copied, readonly)
+				[3]: arg1 (readonly)
+				[4]: arg2 (readonly)
+			]]
+			if Object_5_upvr.Parent == nil then
+				if module_upvr.Leaving == false then
+					module_upvr.Reset(arg1, arg2)
+				end
+			end
+		end))
+		table.insert(tbl, Object_5_upvr.ChildAdded:Connect(function() -- Line 942
+			--[[ Upvalues[3]:
+				[1]: module_upvr (copied, readonly)
+				[2]: arg1 (readonly)
+				[3]: arg2 (readonly)
+			]]
+			if module_upvr.Leaving == false then
+				module_upvr.Info(arg1, arg2)
+			end
+		end))
+		table.insert(tbl, Object_5_upvr.ChildRemoved:Connect(function(arg1_7) -- Line 946
+			--[[ Upvalues[4]:
+				[1]: module_upvr (copied, readonly)
+				[2]: Player_upvr (readonly)
+				[3]: arg1 (readonly)
+				[4]: arg2 (readonly)
+			]]
+			if module_upvr.Leaving == false then
+				if arg1_7.Value == Player_upvr.Name then
+					module_upvr.Reset(arg1, arg2)
+					return
+				end
+				module_upvr.Info(arg1, arg2)
+			end
+		end))
+		table.insert(tbl, Object_5_upvr:GetAttributeChangedSignal("Modifiers"):Connect(function() -- Line 957
+			--[[ Upvalues[7]:
+				[1]: Object_5_upvr (readonly)
+				[2]: module_upvr (copied, readonly)
+				[3]: Player_upvr (readonly)
+				[4]: Modifiers_2_upvr (readonly)
+				[5]: Info_3_upvr (readonly)
+				[6]: Effects_upvr_4 (readonly)
+				[7]: arg1 (readonly)
+			]]
+			local Leader = Object_5_upvr:FindFirstChild("Leader")
+			if module_upvr.Modifiers_Open == true and Leader ~= nil then
+				if Leader.Value ~= Player_upvr.Name then
+					for _, v_11 in pairs(Modifiers_2_upvr) do
+						local Tag = v_11.Tag
+						local SOME_2 = Info_3_upvr.Modifiers.Options:FindFirstChild(Tag)
+						local var280
+						if SOME_2 ~= nil then
+							local tbl_5 = {}
+							if Object_5_upvr:GetAttribute("Modifiers"):find(Tag) ~= nil then
+								var280 = 0
+							else
+								var280 = 1
+							end
+							tbl_5.ImageTransparency = var280
+							var280 = 0.2
+							Effects_upvr_4.Tween(arg1, SOME_2.Selected.Checkmark, "Checkmark", tbl_5, var280, nil, nil, nil, nil, nil, true)
+						end
 					end
 				end
-				if arg3 == "Grab" then
-					i_8 = 600
-					v_5 = (any_GetScale_result1 - 3) * 37
-					i_8 = PrimaryPart_3.CFrame
-					v_5 = 300
-					i_8 = v_5 + (any_GetScale_result1 - 3) * 8.25
-					v_5 = PrimaryPart_3.CFrame.LookVector * (i_8 + v_5) + i_8.UpVector * i_8
-					PrimaryPart_4:ApplyImpulse(v_5)
-					return
-				end
-				if arg3 == "Stomp" then
-					i_8 = 200
-					v_5 = (any_GetScale_result1 - 3) * 12.5
-					i_8 = PrimaryPart_4.CFrame
-					v_5 = 550
-					i_8 = v_5 + (any_GetScale_result1 - 3) * 15
-					v_5 = PrimaryPart_4.CFrame.LookVector * (i_8 + v_5) + i_8.UpVector * i_8
-					PrimaryPart_4:ApplyImpulse(v_5)
-					return
-				end
-				if arg3 == "Kick" then
-					i_8 = 750
-					v_5 = (any_GetScale_result1 - 3) * 46
-					i_8 = PrimaryPart_3.CFrame
-					v_5 = 200
-					i_8 = v_5 + (any_GetScale_result1 - 3) * 5.5
-					v_5 = PrimaryPart_3.CFrame.LookVector * (i_8 + v_5) + i_8.UpVector * i_8
-					PrimaryPart_4:ApplyImpulse(v_5)
-					return
-				end
-				if arg3 == "Dive" then
-					i_8 = 650
-					v_5 = (any_GetScale_result1 - 3) * 40
-					i_8 = PrimaryPart_3.CFrame
-					v_5 = 275
-					i_8 = v_5 + (any_GetScale_result1 - 3) * 7.5
-					v_5 = PrimaryPart_3.CFrame.LookVector * (i_8 + v_5) + i_8.UpVector * i_8
-					PrimaryPart_4:ApplyImpulse(v_5)
-					return
-				end
-				if arg3 == "Punch" then
-					i_8 = 575
-					v_5 = (any_GetScale_result1 - 3) * 35
-					i_8 = PrimaryPart_3.CFrame
-					v_5 = 275
-					i_8 = v_5 + (any_GetScale_result1 - 3) * 7.5
-					v_5 = PrimaryPart_3.CFrame.LookVector * (i_8 + v_5) + i_8.UpVector * i_8
-					PrimaryPart_4:ApplyImpulse(v_5)
-					return
-				end
-				if arg3 == "Roar" then
-					v_5 = new_upvr_2(PrimaryPart_4.Position, PrimaryPart_3.Position).LookVector * -500 + Vector3.new(0, 1000, 0)
-					PrimaryPart_4:ApplyImpulse(v_5)
-					return
-				end
-				if arg3 == "Corkscrew" then
-					i_8 = PrimaryPart_3.CFrame
-					v_5 = PrimaryPart_3.CFrame.LookVector * 1250 + i_8.UpVector * 725
-					PrimaryPart_4:ApplyImpulse(v_5)
-					return
-				end
-				if arg3 == "Brutal" then
-					i_8 = PrimaryPart_3.CFrame
-					v_5 = PrimaryPart_4.CFrame.LookVector * -625 + i_8.UpVector * 1125
-					PrimaryPart_4:ApplyImpulse(v_5)
-					return
-				end
-				if arg3 == "Uppercut" then
-					i_8 = PrimaryPart_3.CFrame.UpVector * 2000
-					PrimaryPart_4:ApplyImpulse(i_8)
-					return
-				end
-				if arg3 == "Earth_Breaker" then
-					v_5 = new_upvr_2(PrimaryPart_4.Position, PrimaryPart_3.Position).LookVector * -500 + Vector3.new(0, 1000, 0)
-					PrimaryPart_4:ApplyImpulse(v_5)
-					return
-				end
-				if arg3 == "Charge" then
-					v_5 = new_upvr_2(PrimaryPart_4.Position, PrimaryPart_3.Position).LookVector * -500 + Vector3.new(0, 1000, 0)
-					PrimaryPart_4:ApplyImpulse(v_5)
-				end
 			end
-		end
+		end))
+		module_upvr.Object_Events = tbl
 	end
+	module_upvr.Update_Screen(arg1)
+	-- KONSTANTERROR: [521] 359. Error Block 53 start (CF ANALYSIS FAILED)
+	module_upvr.Current_Frame = nil
+	-- KONSTANTERROR: [521] 359. Error Block 53 end (CF ANALYSIS FAILED)
 end
-function module_upvr.Escaping(arg1) -- Line 1440
+function module_upvr.Info_Left(arg1, arg2) -- Line 984
 	--[[ Upvalues[1]:
 		[1]: module_upvr (readonly)
 	]]
-	local _ = arg1.Services
-	local Cache_5 = arg1.Cache
-	local Weapon_upvr = arg1.Weapon
-	local Effects_4_upvr = arg1.Modules.Effects
-	local Variables_10 = Cache_5.Variables
-	if Weapon_upvr == "Blades" then
-		Effects_4_upvr.Slash(arg1, true)
-		Effects_4_upvr.Sound(arg1, tostring("Slash_"..math.random(1, 6)), Cache_5.Character.PrimaryPart)
-		if table.find(Cache_5.Slot_Data.Skills.Unlocked, "74") == nil then
-			Variables_10.Reload = false
-			Variables_10.Full_Reload = false
-			-- KONSTANTWARNING: GOTO [67] #44
-		end
+	if module_upvr.Transition == true then
 	else
-		Variables_10.Full_Reload = false
-	end
-	local var346 = module_upvr
-	var346.Escaped = {
-		State = true;
-		Gained = false;
-		Multiplier = 1.5;
-	}
-	if arg1.Skill == '3' or arg1.Skill == "59" or arg1.Skill == "115" or arg1.Skill == "151" then
-		var346 = 1
-	else
-		var346 = 0.5
-	end
-	task.delay(var346, function() -- Line 1464
-		--[[ Upvalues[4]:
-			[1]: module_upvr (copied, readonly)
-			[2]: Weapon_upvr (readonly)
-			[3]: Effects_4_upvr (readonly)
-			[4]: arg1 (readonly)
-		]]
-		module_upvr.Escaped = {
-			State = false;
-			Gained = false;
-		}
-		if Weapon_upvr == "Blades" then
-			Effects_4_upvr.Slash(arg1, false)
+		module_upvr.Leaving = true
+		if arg1:Invoke("S_Missions", "Leave") == true then
+			module_upvr.Reset(arg1, arg2)
+			module_upvr.Leaving = false
 		end
-	end)
+	end
 end
-function module_upvr.Is_Stuck(arg1, arg2) -- Line 1469
-	local Last_Position_upvr = arg2:GetAttribute("Last_Position")
-	if Last_Position_upvr ~= nil then
-		task.delay(1, function() -- Line 1473
-			--[[ Upvalues[3]:
-				[1]: arg1 (readonly)
-				[2]: arg2 (readonly)
-				[3]: Last_Position_upvr (readonly)
+function module_upvr.Info_Begin(arg1, arg2) -- Line 996
+	arg1:Invoke("S_Missions", "Start")
+end
+function module_upvr.Info_Modify(arg1, arg2) -- Line 1000
+	--[[ Upvalues[1]:
+		[1]: module_upvr (readonly)
+	]]
+	if module_upvr.Transition == true then
+	else
+		local Events_5 = arg1.Events
+		local Effects_upvr_3 = arg1.Modules.Effects
+		local Info_7_upvw = arg2.Main.Info
+		module_upvr.Modifiers_Open = true
+		module_upvr.Transition = true
+		if Events_5.Modify_Open == nil then
+			Events_5.Modify_Open = Effects_upvr_3.Tween(arg1, Info_7_upvw.Main, "Mission_Main_Out", {
+				GroupTransparency = 1;
+			}).Completed:Connect(function(arg1_8) -- Line 1016
+				--[[ Upvalues[5]:
+					[1]: module_upvr (copied, readonly)
+					[2]: Info_7_upvw (read and write)
+					[3]: Effects_upvr_3 (readonly)
+					[4]: arg1 (readonly)
+					[5]: arg2 (readonly)
+				]]
+				if arg1_8.Name == "Completed" and module_upvr.Modifiers_Open == true then
+					Info_7_upvw.Main.Visible = false
+					Info_7_upvw.Modifiers.Visible = true
+					Effects_upvr_3.Tween(arg1, Info_7_upvw.Modifiers, "Mission_Modifiers_In", {
+						GroupTransparency = 0;
+					})
+					Effects_upvr_3.Hover(arg1, Info_7_upvw.Modifiers.Modifiers_Buttons.Modifiers_Return, arg2, module_upvr, "Mission")
+					module_upvr.Modifiers(arg1, Info_7_upvw.Modifiers)
+					task.delay(0.25, function() -- Line 1026
+						--[[ Upvalues[1]:
+							[1]: module_upvr (copied, readonly)
+						]]
+						module_upvr.Transition = false
+					end)
+				end
+			end)
+		end
+	end
+end
+function module_upvr.Info_Modifiers_Return(arg1, arg2) -- Line 1032
+	--[[ Upvalues[1]:
+		[1]: module_upvr (readonly)
+	]]
+	if module_upvr.Transition == true then
+	else
+		local Events_6 = arg1.Events
+		local Effects_upvr = arg1.Modules.Effects
+		local Info_6_upvw = arg2.Main.Info
+		module_upvr.Modifiers_Open = false
+		module_upvr.Transition = true
+		if Events_6.Modify_Close == nil then
+			Events_6.Modify_Close = Effects_upvr.Tween(arg1, Info_6_upvw.Modifiers, "Mission_Modifiers_Out", {
+				GroupTransparency = 1;
+			}).Completed:Connect(function(arg1_9) -- Line 1046
+				--[[ Upvalues[4]:
+					[1]: module_upvr (copied, readonly)
+					[2]: Info_6_upvw (read and write)
+					[3]: Effects_upvr (readonly)
+					[4]: arg1 (readonly)
+				]]
+				if arg1_9.Name == "Completed" and module_upvr.Modifiers_Open == false then
+					Info_6_upvw.Main.Visible = true
+					Info_6_upvw.Modifiers.Visible = false
+					Effects_upvr.Tween(arg1, Info_6_upvw.Main, "Mission_Main_In", {
+						GroupTransparency = 0;
+					})
+					task.delay(0.25, function() -- Line 1052
+						--[[ Upvalues[1]:
+							[1]: module_upvr (copied, readonly)
+						]]
+						module_upvr.Transition = false
+					end)
+				end
+			end)
+		end
+	end
+end
+function module_upvr.Info_Objectives_Return(arg1, arg2) -- Line 1058
+	--[[ Upvalues[1]:
+		[1]: module_upvr (readonly)
+	]]
+	local Events_9 = arg1.Events
+	local Effects_upvr_2 = arg1.Modules.Effects
+	local Info_2_upvw = arg2.Main.Info
+	module_upvr.Objectives_Open = false
+	if Events_9.Objectives_Close == nil then
+		Events_9.Objectives_Close = Effects_upvr_2.Tween(arg1, Info_2_upvw.Objectives, "Mission_Objectives_Out", {
+			GroupTransparency = 1;
+		}).Completed:Connect(function(arg1_10) -- Line 1070
+			--[[ Upvalues[4]:
+				[1]: module_upvr (copied, readonly)
+				[2]: Info_2_upvw (read and write)
+				[3]: Effects_upvr_2 (readonly)
+				[4]: arg1 (readonly)
 			]]
-			local W = arg1.Services.W
-			local PrimaryPart_2 = arg2.PrimaryPart
-			if PrimaryPart_2 ~= nil then
-				local Position = PrimaryPart_2.Position
-				if W:Raycast(Last_Position_upvr.Position, (Position - Last_Position_upvr.Position).Unit * (Position - Last_Position_upvr.Position).Magnitude, arg1.Params_2) ~= nil then
-					arg2:SetPrimaryPartCFrame(Last_Position_upvr)
-					return
-				end
-				if W:Raycast(Position, Vector3.new(0, 200, 0), arg1.Params_2) ~= nil then
-					arg2:SetPrimaryPartCFrame(Last_Position_upvr)
-				end
+			if arg1_10.Name == "Completed" and module_upvr.Objectives_Open == false then
+				Info_2_upvw.Main.Visible = true
+				Info_2_upvw.Objectives.Visible = false
+				Effects_upvr_2.Tween(arg1, Info_2_upvw.Main, "Mission_Create_In", {
+					GroupTransparency = 0;
+				})
 			end
 		end)
 	end
+end
+function module_upvr.Modifiers(arg1, arg2) -- Line 1082
+	--[[ Upvalues[1]:
+		[1]: module_upvr (readonly)
+	]]
+	local Modules_5 = arg1.Modules
+	local Object_3 = module_upvr.Selected_Map.Object
+	if Object_3 ~= nil then
+		for _, v_12 in pairs(Modules_5.Modifiers) do
+			local Tag_2 = v_12.Tag
+			local Description = v_12.Description
+			local Boost_2 = v_12.Boost
+			if Object_3:GetAttribute("Type") == "Raids" then
+				Description = string.gsub(Description, "XP/Gold", "Luck")
+				Boost_2 /= 2
+			end
+			Description = string.gsub(Description, "{x}", string.format("%.1f", Boost_2))
+			local var336 = Description
+			if Tag_2 == "Time Trial" then
+				local var337 = Modules_5.Values.Time_Trial_Times[Object_3.Name][Object_3:GetAttribute("Objective")][math.min(Object_3:GetAttribute("Players"), 5)]
+				if var337 then
+					var336 = string.gsub(var336, "{xx:xx}", Modules_5.Format.Conversion(var337, true))
+					local var338
+				end
+			end
+			if arg2.Options:FindFirstChild(Tag_2) == nil then
+				local clone_2 = arg1:Get("Asset", {"Effects", "Option"}):Clone()
+				clone_2.Name = Tag_2
+				var338 = clone_2.Description
+				clone_2.Title.Text = string.upper(Tag_2)
+				var338.Text = var336:gsub("(%d+%.?%d*)", "<font color=\"rgb(218,176,97)\">%1</font>")
+				var338 = clone_2.Selected
+				if Object_3:GetAttribute("Modifiers"):find(Tag_2) ~= nil then
+					var338 = 0
+				else
+					var338 = 1
+				end
+				var338.Checkmark.ImageTransparency = var338
+				clone_2.Parent = arg2.Options
+				Modules_5.Effects.Hover(arg1, clone_2, arg2, module_upvr, "Modify", nil, clone_2.Interact)
+			else
+				clone_2.Description.Text = var336:gsub("(%d+%.?%d*)", "<font color=\"rgb(218,176,97)\">%1</font>")
+				if Object_3:GetAttribute("Modifiers"):find(Tag_2) ~= nil then
+				else
+				end
+				clone_2.Selected.Checkmark.ImageTransparency = 1
+			end
+		end
+	end
+end
+function module_upvr.Modify(arg1, arg2) -- Line 1132
+	--[[ Upvalues[1]:
+		[1]: module_upvr (readonly)
+	]]
+	-- KONSTANTERROR: [0] 1. Error Block 1 start (CF ANALYSIS FAILED)
+	local Object_2 = module_upvr.Selected_Map.Object
+	-- KONSTANTERROR: [0] 1. Error Block 1 end (CF ANALYSIS FAILED)
+	-- KONSTANTERROR: [17] 10. Error Block 2 start (CF ANALYSIS FAILED)
+	-- KONSTANTERROR: [17] 10. Error Block 2 end (CF ANALYSIS FAILED)
+	-- KONSTANTERROR: [33] 20. Error Block 7 start (CF ANALYSIS FAILED)
+	-- KONSTANTERROR: [33] 20. Error Block 7 end (CF ANALYSIS FAILED)
+	-- KONSTANTERROR: [67] 46. Error Block 13 start (CF ANALYSIS FAILED)
+	arg1.Modules.Notify.Fade(arg1, true, "You are not the leader!")
+	-- KONSTANTERROR: [67] 46. Error Block 13 end (CF ANALYSIS FAILED)
+	-- KONSTANTERROR: [73] 51. Error Block 14 start (CF ANALYSIS FAILED)
+	-- KONSTANTERROR: [73] 51. Error Block 14 end (CF ANALYSIS FAILED)
+end
+function module_upvr.Teleporting(arg1, arg2) -- Line 1163
+	--[[ Upvalues[1]:
+		[1]: module_upvr (readonly)
+	]]
+	local Modules_4 = arg1.Modules
+	local Cache_2 = arg1.Cache
+	local Effects_3 = Modules_4.Effects
+	local Loading_Screen = Modules_4.Loading_Screen
+	local Topbar = Modules_4.Topbar
+	local Topbar_2 = Cache_2.Topbar
+	arg1.Invoked = true
+	Loading_Screen.Get(arg1, arg2, true, true)
+	Topbar.Fade(arg1, Topbar_2, Effects_3, "Out")
+	module_upvr.Fade(arg1, false)
+	Effects_3.Sound(arg1, "Bell", Cache_2.Interface, 1.25)
+	arg1.Services.W.Zones.Bell.Stars.Bell.SquareFloor.Enabled = true
+	task.wait(0.15)
+	if Modules_4.Friends.Open == "In" then
+		Topbar.Update(arg1, Topbar_2, "Friends")
+	end
+	Effects_3.Fade(arg1, module_upvr, {Topbar.Category}, "Loading_Screen")
+	Loading_Screen.Transition(arg1, arg2)
+	Topbar.Category = nil
 end
 return module_upvr
