@@ -1,395 +1,598 @@
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("AOTR ULTIMATE HUB V8", "DarkTheme")
- 
---===================== DEĞİŞKENLER =====================
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local VirtualUser = game:GetService("VirtualUser")
-local VirtualInputManager = game:GetService("VirtualInputManager")
-local Player = Players.LocalPlayer
- 
--- Özellik durumları
-local autoReloadEnabled = false
-local killAuraEnabled = false
-local autoReplayEnabled = false
-local afkModeEnabled = false
-local raidModeEnabled = false
-local mansionModeEnabled = false
-local infiniteGasEnabled = false
-local autoExecuteEnabled = false
- 
--- Ayarlar
-local farmRange = 500          -- menzil (metre)
-local attackSpeed = 0.3        -- saldırı hızı (saniye)
-local reloadThreshold = 2       -- kılıç sayısı bu değerin altına düşünce yenile
- 
--- İstatistikler
-local totalKills = 0
-local totalReloads = 0
-local startTime = tick()
- 
---===================== YARDIMCI FONKSİYONLAR =====================
- 
--- Titan mı? kontrolü
-local function isTitan(model)
-    if not model or not model:IsA("Model") then return false end
-    local name = model.Name:lower()
-    return (name:find("titan") or name:find("abnormal") or name:find("colossal") 
-            or name:find("armored") or name:find("female") or name:find("beast") 
-            or name:find("jaw") or name:find("cart") or name:find("founding") 
-            or name:find("pure") or name:find("mindless") or name:find("smiling")) 
-            and model:FindFirstChild("Humanoid") and model.Humanoid.Health > 0
+while task.wait(1) do
+    if pcall(function() return game.Players.LocalPlayer.Character.Main.W end)
+    then wait(0.2); break
+    else print("[AOTr] Join a mission first!") end
+end
+while task.wait(1) do
+    if pcall(function() return game.Workspace.Titans:FindFirstChildOfClass("Model").Fake.Head.Header end)
+    then wait(0.2); break
+    else print("[AOTr] Waiting for titans...") end
+end
+while task.wait(0.2) do
+    if pcall(function() return game.Workspace.Unclimbable.Reloads:FindFirstChild("GasTanks"):FindFirstChild("Refill") end)
+    then wait(0.2); break end
 end
  
--- Haritadaki titan sayısını döndürür
-local function getTitanCount()
-    local count = 0
-    for _, v in pairs(workspace:GetDescendants()) do
-        if isTitan(v) then
-            count = count + 1
-        end
-    end
-    return count
+local lp     = game.Players.LocalPlayer
+local char   = lp.Character
+local root   = char:FindFirstChild("HumanoidRootPart")
+local titans = game.Workspace:WaitForChild("Titans")
+ 
+local refill
+pcall(function()
+    refill = game.Workspace.Unclimbable.Reloads
+        :FindFirstChild("GasTanks")
+        :FindFirstChild("Refill")
+end)
+ 
+-- ─── Blade label ──────────────────────────────────────────────────────────────
+local bladeLabel = nil
+pcall(function()
+    bladeLabel = lp.PlayerGui.Interface.HUD.Main.Top.Blades.Sets
+end)
+if bladeLabel then
+    local ok, txt = pcall(function() return bladeLabel.Text end)
+    print("[AOTr] Blade label found! Text='" .. (ok and txt or "?") .. "'")
+else
+    print("[AOTr] Blade label NOT found")
 end
  
--- Replay at (çoklu yöntem)
-local function triggerReplay()
-    local player = Player
-    -- Yöntem 1: DeathGui butonu
-    local deathGui = player.PlayerGui:FindFirstChild("DeathGui")
-    if deathGui then
-        local replayBtn = deathGui:FindFirstChild("ReplayButton") or deathGui:FindFirstChild("RespawnButton")
-        if replayBtn then
-            replayBtn:Fire()
-            return true
-        end
-    end
-    -- Yöntem 2: Remote event
-    local remotes = ReplicatedStorage:FindFirstChild("Remotes")
-    if remotes then
-        local respawnRemote = remotes:FindFirstChild("Respawn") or remotes:FindFirstChild("Replay") or remotes:FindFirstChild("SpawnCharacter")
-        if respawnRemote then
-            respawnRemote:FireServer()
-            return true
-        end
-    end
-    -- Yöntem 3: R tuşu simülasyonu
-    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.R, false, game)
-    wait(0.1)
-    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.R, false, game)
-    return true
+local function getBladeCount()
+    if not bladeLabel then return nil end
+    local ok, txt = pcall(function() return bladeLabel.Text end)
+    if not ok or type(txt) ~= "string" then return nil end
+    local cur = txt:match("^(%d+)%s*/%s*%d+$")
+    return cur and tonumber(cur) or nil
 end
  
---===================== AUTO RELOAD THREAD =====================
-local function startAutoReload()
-    spawn(function()
-        while autoReloadEnabled or afkModeEnabled or raidModeEnabled or mansionModeEnabled do
-            pcall(function()
-                local char = Player.Character
-                if char and char:FindFirstChild("Blades") then
-                    if char.Blades.Value < reloadThreshold then
-                        ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Reload"):FireServer()
-                        totalReloads = totalReloads + 1
-                        -- Bekleme süresi moda göre değişsin
-                        if raidModeEnabled or mansionModeEnabled then
-                            wait(0.1)
-                        elseif afkModeEnabled then
-                            wait(0.5)
-                        else
-                            wait(0.3)
-                        end
-                    end
+local function getRoot()
+    local c = lp.Character
+    if c then
+        local r = c:FindFirstChild("HumanoidRootPart")
+        if r then char = c; root = r end
+    end
+    return root
+end
+ 
+local S = {
+    napeExtend     = false,
+    napeSize       = 150,
+    napeVisible    = true,
+    erenExtend     = false,
+    loopRunning    = false,
+    killCount      = 0,
+    lastRefillTime = 0,
+    leftleg=nil, rightleg=nil, leftarm=nil,
+    rightarm=nil, eyes=nil, erenNape=nil,
+    attacktitan=nil, marker=nil,
+}
+ 
+-- ============================================================
+-- UTILITIES
+-- ============================================================
+local function getAllTitans()
+    local out = {}
+    for _, v in ipairs(titans:GetChildren()) do
+        if v:IsA("Model") then out[#out+1] = v end
+    end
+    return out
+end
+ 
+local function getNape(model)
+    local ok, n = pcall(function() return model.Hitboxes.Hit.Nape end)
+    return (ok and n) or nil
+end
+ 
+local function applyToAllTitans(fn)
+    for _, titan in ipairs(getAllTitans()) do
+        pcall(fn, titan)
+    end
+end
+ 
+local function distance3(a, b)
+    local dx = a.X - b.X
+    local dy = a.Y - b.Y
+    local dz = a.Z - b.Z
+    return math.sqrt(dx*dx + dy*dy + dz*dz)
+end
+ 
+local function getNearestTitan()
+    local r = getRoot()
+    if not r then return nil, math.huge end
+    local nearest, nearestDist = nil, math.huge
+    for _, titan in ipairs(getAllTitans()) do
+        if titan.Name ~= "Attack_Titan" then
+            local n = getNape(titan)
+            if n then
+                local dist = distance3(r.Position, n.Position)
+                if dist < nearestDist then
+                    nearest = titan
+                    nearestDist = dist
                 end
-                -- Gaz kontrolü
-                local gas = char and char:FindFirstChild("Gas")
-                if gas and gas.Value < 20 then
-                    ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Reload"):FireServer()
-                end
-            end)
-            -- Döngü beklemesi moda göre
-            if raidModeEnabled or mansionModeEnabled then
-                wait(0.3)
-            elseif afkModeEnabled then
-                wait(1.5)
-            else
-                wait(0.8)
             end
+        end
+    end
+    return nearest, nearestDist
+end
+ 
+local function isAlive(titan)
+    if not titan or not titan.Parent then return false end
+    local hum = titan:FindFirstChildOfClass("Humanoid")
+    if hum and hum.Health > 0 then return true end
+    local head = titan:FindFirstChild("Fake") and titan.Fake:FindFirstChild("Head")
+    if head and head:FindFirstChild("Header") and head.Header.Enabled then return true end
+    return false
+end
+ 
+local function pressR()
+    pcall(function()
+        local vim = game:GetService("VirtualInputManager")
+        vim:SendKeyEvent(true,  Enum.KeyCode.R, false, game)
+        task.wait(0.08)
+        vim:SendKeyEvent(false, Enum.KeyCode.R, false, game)
+    end)
+    pcall(function() keypress(0x52); task.wait(0.1); keyrelease(0x52) end)
+end
+ 
+-- ============================================================
+-- REFILL
+-- ============================================================
+local function doRefill()
+    if not refill then return end
+    local r = getRoot()
+    if not r then print("[AOTr] No root for refill!"); return end
+ 
+    print("[AOTr] === REFILL START ===")
+    notify("Blades 0/3! Refilling...", "AOTr", 4)
+ 
+    local rx = refill.Position.X
+    local ry = refill.Position.Y + 3
+    local rz = refill.Position.Z
+ 
+    local holdStart = tick()
+    while tick() - holdStart < 8 do
+        r = getRoot()
+        if r then pcall(function() r.Position = Vector3.new(rx, ry, rz) end) end
+        task.wait(0.25)
+    end
+ 
+    pressR(); task.wait(0.4)
+    pressR(); task.wait(0.4)
+    pressR(); task.wait(0.4)
+    print("[AOTr] Pressed R x3")
+    task.wait(1)
+ 
+    r = getRoot()
+    local nearest = getNearestTitan()
+    if nearest then
+        local n = getNape(nearest)
+        if n then
+            r = getRoot()
+            if r then
+                pcall(function()
+                    r.Position = Vector3.new(n.Position.X, n.Position.Y + 600, n.Position.Z)
+                end)
+            end
+        end
+    end
+ 
+    S.lastRefillTime = tick()
+    task.wait(3)
+    print("[AOTr] === REFILL DONE ===")
+    notify("Refilled! Resuming...", "AOTr", 3)
+end
+ 
+-- ============================================================
+-- HITBOX
+-- ============================================================
+local function applyExtend()
+    applyToAllTitans(function(titan)
+        if titan.Name == "Attack_Titan" then return end
+        local n = getNape(titan)
+        if not n then return end
+        if S.napeExtend then
+            n.Size         = Vector3.new(S.napeSize, S.napeSize, S.napeSize)
+            n.Color        = Color3.new(1, 1, 1)
+            n.Material     = Enum.Material.Neon
+            n.Transparency = S.napeVisible and 0.5 or 1
+        else
+            n.Size         = Vector3.new(15, 9, 11)
+            n.Color        = Color3.new(1, 0, 0)
+            n.Transparency = 1
         end
     end)
 end
  
---===================== KILL AURA THREAD =====================
-local function startKillAura()
-    spawn(function()
-        while killAuraEnabled or afkModeEnabled or raidModeEnabled or mansionModeEnabled do
+local function applyNapeVisible()
+    applyToAllTitans(function(titan)
+        local n = getNape(titan)
+        if n then
+            n.Transparency = (S.napeExtend and S.napeVisible) and 0.5 or 1
+        end
+    end)
+end
+ 
+-- ============================================================
+-- EREN / ATTACK TITAN
+-- ============================================================
+local function resetErenParts()
+    for _, p in ipairs({S.leftleg,S.rightleg,S.leftarm,S.rightarm,S.eyes,S.erenNape}) do
+        if p then
             pcall(function()
-                local char = Player.Character
-                if char and char:FindFirstChild("HumanoidRootPart") then
-                    local pos = char.HumanoidRootPart.Position
-                    local attackCount = 0
-                    local maxAttacks = 20 -- her döngüde max saldırı (performans)
-                    for _, v in pairs(workspace:GetDescendants()) do
-                        if attackCount >= maxAttacks then break end
-                        if isTitan(v) then
-                            local part = v:FindFirstChild("Head") or v:FindFirstChild("HumanoidRootPart") or v:FindFirstChild("Torso")
-                            if part and (part.Position - pos).magnitude < farmRange then
-                                local remote = ReplicatedStorage:FindFirstChild("Remotes")
-                                if remote then
-                                    local attack = remote:FindFirstChild("AttackTitan")
-                                    if attack then
-                                        attack:FireServer("AttackTitan", v, "Nape")
-                                        attackCount = attackCount + 1
-                                        totalKills = totalKills + 1
-                                    end
-                                end
-                                -- Saldırı hızı moda göre
-                                if raidModeEnabled or mansionModeEnabled then
-                                    wait(0.1)
-                                elseif afkModeEnabled then
-                                    wait(0.5)
-                                else
-                                    wait(attackSpeed)
-                                end
+                p.Size         = Vector3.new(10, 20, 10)
+                p.Color        = Color3.new(1, 1, 1)
+                p.Transparency = 1
+            end)
+        end
+    end
+end
+ 
+local function extendErenPart(p)
+    if p then
+        pcall(function()
+            p.Size         = Vector3.new(95, 95, 95)
+            p.Color        = Color3.new(1, 1, 1)
+            p.Material     = Enum.Material.Neon
+            p.Transparency = 0.94
+        end)
+    end
+end
+ 
+local function updateErenTarget()
+    if not S.attacktitan then return end
+    local ok, adornee = pcall(function() return S.marker.Adornee end)
+    if not ok or not S.erenExtend then resetErenParts(); return end
+    resetErenParts()
+    wait(0.05)
+    if     adornee == S.leftleg  then extendErenPart(S.leftleg)
+    elseif adornee == S.rightleg then extendErenPart(S.rightleg)
+    elseif adornee == S.leftarm  then extendErenPart(S.leftarm)
+    elseif adornee == S.rightarm then extendErenPart(S.rightarm)
+    elseif adornee == S.eyes     then extendErenPart(S.eyes)
+    elseif adornee == S.erenNape then extendErenPart(S.erenNape)
+    end
+end
+ 
+local function setupAttackTitan()
+    wait(0.2)
+    S.attacktitan = titans:FindFirstChild("Attack_Titan")
+    if not S.attacktitan then return end
+    local ok, marker = pcall(function() return S.attacktitan:WaitForChild("Marker", 5) end)
+    if not ok or not marker then return end
+    S.marker = marker
+    local hb = S.attacktitan:FindFirstChild("Hitboxes")
+    if hb and hb:FindFirstChild("Hit") then
+        S.leftleg  = hb.Hit:FindFirstChild("LeftLeg")
+        S.rightleg = hb.Hit:FindFirstChild("RightLeg")
+        S.leftarm  = hb.Hit:FindFirstChild("LeftArm")
+        S.rightarm = hb.Hit:FindFirstChild("RightArm")
+        S.eyes     = hb.Hit:FindFirstChild("Eyes")
+        S.erenNape = hb.Hit:FindFirstChild("Nape")
+    end
+    print("[AOTr] Attack Titan set up!")
+    coroutine.wrap(function()
+        local lastAdornee = nil
+        while S.attacktitan and S.marker do
+            wait(0.1)
+            local ok2, ad = pcall(function() return S.marker.Adornee end)
+            if ok2 and ad ~= lastAdornee then
+                lastAdornee = ad
+                if S.erenExtend then coroutine.wrap(updateErenTarget)() end
+            end
+        end
+    end)()
+end
+ 
+-- ============================================================
+-- FARM CYCLE
+-- height 600, steps 40, step wait 0.04 = slow dive
+-- click interval 0.015 = fast clicks
+-- ============================================================
+local function doFarmCycle(titan, n)
+    local r = getRoot()
+    if not r or not n then return end
+ 
+    pcall(function()
+        n.Size         = Vector3.new(S.napeSize, S.napeSize, S.napeSize)
+        n.Color        = Color3.new(1, 1, 1)
+        n.Material     = Enum.Material.Neon
+        n.Transparency = S.napeVisible and 0.5 or 1
+    end)
+ 
+    local pos = n.Position
+    r.Position = Vector3.new(pos.X, pos.Y + 600, pos.Z)
+    task.wait(0.15)
+ 
+    pcall(function()
+        n.Size         = Vector3.new(S.napeSize, S.napeSize, S.napeSize)
+        n.Transparency = S.napeVisible and 0.5 or 1
+    end)
+ 
+    local clicking = true
+    task.spawn(function()
+        while clicking do
+            mouse1click()
+            task.wait(0.015)
+        end
+    end)
+ 
+    local startY   = pos.Y + 600
+    local endY     = pos.Y - 30
+    local steps    = 40
+    local stepSize = (startY - endY) / steps
+ 
+    for i = 1, steps do
+        if not S.loopRunning then break end
+        if i % 10 == 0 and not isAlive(titan) then break end
+        r = getRoot()
+        if r then
+            r.Position = Vector3.new(pos.X, startY - (stepSize * i), pos.Z)
+        end
+        task.wait(0.04)
+    end
+ 
+    clicking = false
+    S.killCount = S.killCount + 1
+end
+ 
+-- ============================================================
+-- CONTINUOUS EXTEND LOOP — self-restarting, never silently dies
+-- ============================================================
+local function startNapeLoop()
+    task.spawn(function()
+        while true do
+            local ok, err = pcall(function()
+                while true do
+                    task.wait(0.3)
+                    if S.napeExtend then
+                        applyToAllTitans(function(titan)
+                            if titan.Name == "Attack_Titan" then return end
+                            local n = getNape(titan)
+                            if n then
+                                n.Size         = Vector3.new(S.napeSize, S.napeSize, S.napeSize)
+                                n.Color        = Color3.new(1, 1, 1)
+                                n.Material     = Enum.Material.Neon
+                                n.Transparency = S.napeVisible and 0.5 or 1
+                            end
+                        end)
+                    end
+                end
+            end)
+            print("[AOTr] Nape loop crashed, restarting... err=" .. tostring(err))
+            task.wait(0.5)
+        end
+    end)
+end
+startNapeLoop()
+ 
+-- ============================================================
+-- AUTO SCAN NEW TITANS
+-- ============================================================
+coroutine.wrap(function()
+    local known = {}
+    for _, v in ipairs(titans:GetChildren()) do known[v] = true end
+    while true do
+        wait(0.5)
+        for _, child in ipairs(titans:GetChildren()) do
+            if not known[child] then
+                known[child] = true
+                if child.Name == "Attack_Titan" then
+                    coroutine.wrap(setupAttackTitan)()
+                elseif child:IsA("Model") then
+                    wait(0.1)
+                    if S.napeExtend then
+                        local n = getNape(child)
+                        if n then
+                            n.Size         = Vector3.new(S.napeSize, S.napeSize, S.napeSize)
+                            n.Color        = Color3.new(1, 1, 1)
+                            n.Material     = Enum.Material.Neon
+                            n.Transparency = S.napeVisible and 0.5 or 1
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)()
+ 
+-- ============================================================
+-- ANTI AFK
+-- ============================================================
+coroutine.wrap(function()
+    while true do
+        task.wait(55)
+        mouse1click()
+    end
+end)()
+ 
+print("[AOTr] Background loops started!")
+ 
+-- ============================================================
+-- GUI
+-- ============================================================
+UI.AddTab("AOTr Script", function(tab)
+ 
+    local workingSec = tab:Section("Working", "Left")
+ 
+    workingSec:Toggle("nape_extend", "Nape Extend (All Titans)", false, function(state)
+        S.napeExtend = state
+        coroutine.wrap(applyExtend)()
+    end)
+ 
+    workingSec:SliderInt("nape_size", "Nape Size", 15, 500, 150, function(val)
+        S.napeSize = val
+        if S.napeExtend then coroutine.wrap(applyExtend)() end
+    end)
+ 
+    workingSec:Toggle("nape_visible", "Nape Visible (when extended)", true, function(state)
+        S.napeVisible = state
+        coroutine.wrap(applyNapeVisible)()
+    end)
+ 
+    workingSec:Button("Teleport to Refill", function()
+        local r = getRoot()
+        if refill and r then
+            r.Position = refill.Position + Vector3.new(0, 3, 0)
+        else
+            print("[AOTr] Refill not found!")
+        end
+    end)
+ 
+    workingSec:Button("TP to Nearest Titan", function()
+        local r = getRoot()
+        if not r then return end
+        local nearest = getNearestTitan()
+        if not nearest then return end
+        local n = getNape(nearest)
+        if not n then return end
+        local nX, nY, nZ = n.Position.X, n.Position.Y, n.Position.Z
+        task.spawn(function()
+            r = getRoot()
+            if not r then return end
+            pcall(function() r.Position = Vector3.new(nX, nY + 600, nZ) end)
+            task.wait(0.1)
+            local diveStart = nY + 600
+            local diveEnd   = nY + 30
+            local steps = math.ceil(math.abs(diveStart - diveEnd) / 30)
+            for i = 1, steps do
+                local alpha = i / steps
+                r = getRoot()
+                if r then
+                    pcall(function()
+                        r.Position = Vector3.new(nX, diveStart + (diveEnd - diveStart) * alpha, nZ)
+                    end)
+                end
+                task.wait(0.005)
+            end
+        end)
+    end)
+ 
+    workingSec:Button("Show Blade Count", function()
+        local count = getBladeCount()
+        local str = count ~= nil and (tostring(count) .. " / 3") or "label not found"
+        print("[AOTr] Blades: " .. str)
+        notify("Blades: " .. str, "AOTr", 3)
+    end)
+ 
+    local farmSec = tab:Section("Autofarm", "Right")
+ 
+    farmSec:Toggle("eren_extend", "Extend Eren Weak Point", false, function(state)
+        S.erenExtend = state
+        if state then
+            if titans:FindFirstChild("Attack_Titan") then
+                if not S.attacktitan then
+                    coroutine.wrap(setupAttackTitan)()
+                else
+                    coroutine.wrap(updateErenTarget)()
+                end
+            else
+                print("[AOTr] No Attack Titan in map")
+            end
+        else
+            coroutine.wrap(resetErenParts)()
+        end
+    end)
+ 
+    farmSec:Button("START Autofarm", function()
+        if S.loopRunning then notify("Already running!", "AOTr", 2); return end
+        S.loopRunning = true
+        S.napeExtend  = true
+        UI.SetValue("nape_extend", true)
+        coroutine.wrap(applyExtend)()
+        print("[AOTr] Autofarm started!")
+        notify("Autofarm ON", "AOTr", 3)
+ 
+        task.spawn(function()
+            while S.loopRunning do
+                local blades = getBladeCount()
+                local refillReady = (tick() - S.lastRefillTime) > 20
+                if blades ~= nil and blades <= 0 and refillReady then
+                    print("[AOTr] Blades 0/3 — refilling")
+                    doRefill()
+                else
+                    local farmed = false
+                    for _, titan in ipairs(getAllTitans()) do
+                        if not S.loopRunning then break end
+                        if titan.Name ~= "Attack_Titan" and isAlive(titan) then
+                            local n = getNape(titan)
+                            if n then
+                                doFarmCycle(titan, n)
+                                task.wait(0.2)
+                                farmed = true
                             end
                         end
                     end
+                    if not farmed then task.wait(0.5) end
                 end
-            end)
-            -- Döngü beklemesi
-            if raidModeEnabled or mansionModeEnabled then
-                wait(0.2)
-            elseif afkModeEnabled then
-                wait(1.5)
-            else
-                wait(0.8)
             end
-        end
-    end)
-end
- 
---===================== AUTO REPLAY (ölünce) THREAD =====================
-local function startAutoReplay()
-    spawn(function()
-        while autoReplayEnabled or afkModeEnabled or raidModeEnabled or mansionModeEnabled do
-            pcall(function()
-                local char = Player.Character
-                if char and char:FindFirstChild("Humanoid") and char.Humanoid.Health <= 0 then
-                    Library:Notify("Ölüm tespit edildi, replay atılıyor...")
-                    wait(1.5)
-                    triggerReplay()
-                    wait(2)
-                end
-            end)
-            wait(2)
-        end
-    end)
-end
- 
---===================== RAID/MANSION TAKİP THREAD (titanlar bitince replay) =====================
-local function startRaidMansionTracker()
-    spawn(function()
-        while raidModeEnabled or mansionModeEnabled do
-            pcall(function()
-                local titanCount = getTitanCount()
-                if titanCount == 0 then
-                    Library:Notify("Hiç titan kalmadı! Replay atılıyor...")
-                    wait(2)
-                    triggerReplay()
-                    wait(5) -- replay sonrası biraz bekle, tekrar hemen atmasın
-                end
-            end)
-            wait(3) -- 3 saniyede bir kontrol et
-        end
-    end)
-end
- 
---===================== GUI: ANA SEKME =====================
-local MainTab = Window:NewTab("Ana")
-local MainSection = MainTab:NewSection("Savaş Özellikleri")
- 
-MainSection:NewToggle("Auto Reload", "Kılıç bitince/kırılınca otomatik yeniler", function(state)
-    autoReloadEnabled = state
-    if state then startAutoReload() end
-    Library:Notify("Auto Reload " .. (state and "Açık" or "Kapalı"))
-end)
- 
-MainSection:NewToggle("Kill Aura", "Otomatik titan öldürme (ayarlanabilir)", function(state)
-    killAuraEnabled = state
-    if state then startKillAura() end
-    Library:Notify("Kill Aura " .. (state and "Açık" or "Kapalı"))
-end)
- 
-MainSection:NewToggle("Auto Replay (ölünce)", "Öldüğünüzde otomatik yeniden doğar", function(state)
-    autoReplayEnabled = state
-    if state then startAutoReplay() end
-    Library:Notify("Auto Replay " .. (state and "Açık" or "Kapalı"))
-end)
- 
---===================== RAID MODU SEKME =====================
-local RaidTab = Window:NewTab("Raid Modu")
-local RaidSection = RaidTab:NewSection("Raid Ayarları")
- 
-RaidSection:NewToggle("Raid Modu", "Tüm titanlar ölünce otomatik replay (hızlı saldırı)", function(state)
-    raidModeEnabled = state
-    if state then
-        -- mansion modunu kapat
-        mansionModeEnabled = false
-        -- özellikleri aç
-        autoReloadEnabled = true
-        killAuraEnabled = true
-        autoReplayEnabled = true
-        infiniteGasEnabled = true
-        -- raid ayarları
-        farmRange = 1000
-        attackSpeed = 0.1
-        reloadThreshold = 3
-        -- thread'leri başlat
-        startAutoReload()
-        startKillAura()
-        startAutoReplay()
-        startRaidMansionTracker()
-        Library:Notify("Raid Modu Aktif! (Menzil: 1000m, Hız: 0.1s)")
-    else
-        raidModeEnabled = false
-        Library:Notify("Raid Modu Kapalı")
-    end
-end)
- 
-RaidSection:NewToggle("Mansion Modu", "Konak görevlerinde tüm titanlar ölünce replay", function(state)
-    mansionModeEnabled = state
-    if state then
-        raidModeEnabled = false
-        autoReloadEnabled = true
-        killAuraEnabled = true
-        autoReplayEnabled = true
-        infiniteGasEnabled = true
-        farmRange = 800
-        attackSpeed = 0.2
-        reloadThreshold = 2
-        startAutoReload()
-        startKillAura()
-        startAutoReplay()
-        startRaidMansionTracker()
-        Library:Notify("Mansion Modu Aktif! (Menzil: 800m, Hız: 0.2s)")
-    else
-        mansionModeEnabled = false
-        Library:Notify("Mansion Modu Kapalı")
-    end
-end)
- 
---===================== AFK MODU SEKME =====================
-local AFKTab = Window:NewTab("AFK Modu")
-local AFKSection = AFKTab:NewSection("Gece Boyu AFK")
- 
-AFKSection:NewToggle("AFK Modu", "Tüm özellikleri açar, düşük CPU ile gece boyu çalışır", function(state)
-    afkModeEnabled = state
-    if state then
-        autoReloadEnabled = true
-        killAuraEnabled = true
-        autoReplayEnabled = true
-        infiniteGasEnabled = true
-        farmRange = 600
-        attackSpeed = 0.5
-        reloadThreshold = 2
-        startAutoReload()
-        startKillAura()
-        startAutoReplay()
-        Library:Notify("AFK Modu Aktif! İyi geceler...")
-    else
-        afkModeEnabled = false
-        Library:Notify("AFK Modu Kapalı")
-    end
-end)
- 
---===================== AYARLAR SEKME =====================
-local SettingsTab = Window:NewTab("Ayarlar")
-local SettingsSection = SettingsTab:NewSection("Genel Ayarlar")
- 
-SettingsSection:NewSlider("Saldırı Menzili", "metre", 1000, 100, function(v)
-    farmRange = v
-    Library:Notify("Menzil: " .. v .. "m")
-end, 500)
- 
-SettingsSection:NewSlider("Saldırı Hızı", "saniye", 1, 0.1, function(v)
-    attackSpeed = v
-    Library:Notify("Saldırı Hızı: " .. v .. "s")
-end, 0.3)
- 
-SettingsSection:NewSlider("Reload Eşiği", "Kılıç sayısı bu değerin altına düşünce yenile", 5, 1, function(v)
-    reloadThreshold = v
-    Library:Notify("Reload eşiği: " .. v)
-end, 2)
- 
-SettingsSection:NewToggle("Sonsuz Gaz", "Gaz hiç bitmez", function(state)
-    infiniteGasEnabled = state
-    if state then
-        local mt = getrawmetatable(game)
-        local old = mt.__namecall
-        setreadonly(mt, false)
-        mt.__namecall = newcclosure(function(self, ...)
-            if getnamecallmethod() == "FireServer" and self.Name == "GasDepleteEvent" then
-                return
-            end
-            return old(self, ...)
+            print("[AOTr] Autofarm stopped!")
+            notify("Autofarm OFF", "AOTr", 3)
         end)
-        setreadonly(mt, true)
-        Library:Notify("Sonsuz Gaz Aktif")
-    end
-end)
+    end)
  
-SettingsSection:NewToggle("Auto Execute", "Harita değişse bile özellikler devam eder", function(state)
-    autoExecuteEnabled = state
-    if state then
-        Player.OnTeleport:Connect(function()
-            if autoExecuteEnabled then
-                wait(3)
-                Library:Notify("Yeni haritaya geçildi, özellikler devam ediyor...")
-                -- Açık olan modları yeniden başlat (thread'ler zaten çalışıyor olacak)
+    farmSec:Button("STOP Autofarm", function()
+        S.loopRunning = false
+        notify("Autofarm STOPPED", "AOTr", 3)
+    end)
+ 
+    farmSec:Button("Show Kill Count", function()
+        print("[AOTr] Kills: " .. S.killCount)
+        notify("Kills: " .. S.killCount, "AOTr", 3)
+    end)
+ 
+    farmSec:Button("Reset Kill Count", function()
+        S.killCount = 0
+        print("[AOTr] Kill count reset")
+    end)
+ 
+    local utilSec = tab:Section("Utilities", "Right")
+ 
+    utilSec:Button("Scan / Debug", function()
+        local r = getRoot()
+        print("[AOTr] ===== DEBUG =====")
+        print("[AOTr] root="            .. tostring(r ~= nil))
+        if r then print("[AOTr] rootY=" .. tostring(r.Position.Y)) end
+        print("[AOTr] loopRunning="     .. tostring(S.loopRunning))
+        print("[AOTr] napeExtend="      .. tostring(S.napeExtend))
+        print("[AOTr] killCount="       .. S.killCount)
+        print("[AOTr] blades="          .. tostring(getBladeCount()))
+        print("[AOTr] secsSinceRefill=" .. math.floor(tick() - S.lastRefillTime))
+        local count = 0
+        for _, t in ipairs(getAllTitans()) do
+            count = count + 1
+            local n = getNape(t)
+            if n then print("[AOTr] titan=" .. t.Name .. " napeY=" .. math.floor(n.Position.Y)) end
+        end
+        print("[AOTr] total titans=" .. count)
+        print("[AOTr] =================")
+    end)
+ 
+    utilSec:Button("Force Apply Extend", function()
+        coroutine.wrap(applyExtend)()
+    end)
+ 
+    utilSec:Button("Reset All Napes", function()
+        S.napeExtend = false
+        UI.SetValue("nape_extend", false)
+        applyToAllTitans(function(titan)
+            local n = getNape(titan)
+            if n then
+                n.Size         = Vector3.new(15, 9, 11)
+                n.Color        = Color3.new(1, 0, 0)
+                n.Transparency = 1
             end
         end)
-        Library:Notify("Auto Execute Aktif")
-    end
+        print("[AOTr] All napes reset")
+    end)
+ 
+    local noteSec = tab:Section("Info", "Left")
+    noteSec:Text("AOTr Script | Matcha LuaVM")
+    noteSec:Spacing()
+    noteSec:Text("Dive: height 600, 40 steps at 0.04s = slow")
+    noteSec:Text("Clicks: every 0.015s = fast")
+    noteSec:Text("Nape loop: self-restarting, never dies")
+    noteSec:Text("Refill: 0/3 trigger, 20s cooldown after")
+ 
 end)
  
---===================== İSTATİSTİK SEKME =====================
-local StatsTab = Window:NewTab("İstatistik")
-local StatsSection = StatsTab:NewSection("Bilgiler")
- 
-StatsSection:NewButton("İstatistikleri Göster", "Toplam kill, reload ve çalışma süresi", function()
-    local elapsed = math.floor((tick() - startTime) / 60)
-    Library:Notify(string.format("Toplam Kill: %d\nToplam Reload: %d\nÇalışma Süresi: %d dk", totalKills, totalReloads, elapsed))
-end)
- 
-StatsSection:NewButton("Tüm Özellikleri Kapat", "Acil durdurma", function()
-    autoReloadEnabled = false
-    killAuraEnabled = false
-    autoReplayEnabled = false
-    afkModeEnabled = false
-    raidModeEnabled = false
-    mansionModeEnabled = false
-    infiniteGasEnabled = false
-    Library:Notify("Tüm özellikler kapatıldı")
-end)
- 
---===================== BAŞLANGIÇ MESAJI =====================
-Library:Notify("AOTR Ultimate Hub V8 yüklendi! Xeno uyumlu.")
-Library:Notify("Tüm haritalarda çalışır, Raid/Mansion modlarında otomatik replay.")
- 
---===================== ANTI-AFK =====================
-spawn(function()
-    while true do
-        wait(60)
-        pcall(function()
-            VirtualUser:CaptureController()
-            VirtualUser:ClickButton2(Vector2.new())
-        end)
-    end
-end)
- 
---===================== TELEPORT KONTROLÜ (Auto Execute için) =====================
-Player.OnTeleport:Connect(function()
-    if autoExecuteEnabled then
-        wait(3)
-        Library:Notify("Teleport oldunuz, script çalışmaya devam ediyor...")
-    end
-end)
+print("[AOTr Script] Loaded!")
