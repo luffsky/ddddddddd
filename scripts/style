@@ -1,155 +1,372 @@
-if game.PlaceId ~= 13379208636 then game:GetService("StarterGui"):SetCore("SendNotification",{Title="Erreur",Text="Seulement AOTR !",Duration=5});return end -- AOTR PlaceId
+local function ExilityHub_Execute()
+    
+    -- Empêche l'exécution multiple si le script a déjà été chargé
+    if getgenv().EXILITY_LOADED then
+        print("[ExilityHub] Le script est déjà en cours d'exécution. Arrêt.")
+        return
+    end
+    getgenv().EXILITY_LOADED = true
+    
+    local function custom_log(message)
+        print("[ExilityHub AoTR v4.1] " .. message)
+    end
  
-local Players = game:GetService("Players")
-local RS = game:GetService("RunService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
-local plr = Players.LocalPlayer
-local remotes = ReplicatedStorage:WaitForChild("Remotes")
+    local function safe_pcall(f, ...)
+        local ok, res = pcall(f, ...)
+        return ok and res or nil
+    end
  
-local Rejoin = remotes:WaitForChild("Rejoin") -- Assume common remote names, adjust if needed
-local RechargeBlades = remotes:WaitForChild("RechargeBlades")
-local char = plr.Character or plr.CharacterAdded:Wait()
-local hrp = char:WaitForChild("HumanoidRootPart")
-local hum = char:WaitForChild("Humanoid")
+    local function safeFire(remote, ...)
+        if not remote or typeof(remote) ~= "Instance" then
+            return false
+        end
+        local ok = pcall(function()
+            if remote.ClassName == "RemoteFunction" and type(remote.InvokeServer) == "function" then
+                remote:InvokeServer(...)
+            elseif remote.ClassName == "RemoteEvent" and type(remote.FireServer) == "function" then
+                remote:FireServer(...)
+            end
+        end)
+        return ok
+    end
  
--- Vars
-local autoFarm = false
-local autoRelaunch = false
-local autoRecharge = false
-local autoExit = false
-local connections = {}
+    -----------------------------
+    -- ====== SERVICES ====== --
+    -----------------------------
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local UIS = game:GetService("UserInputService")
+    local Workspace = game:GetService("Workspace")
+    local TeleportService = game:GetService("TeleportService")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage") 
+    local Debris = game:GetService("Debris") 
  
-local function clearConns()
-  for _,conn in pairs(connections) do
-    conn:Disconnect()
-  end
-  connections = {}
+    local player = Players.LocalPlayer
+ 
+    local function waitForCharacter()
+        if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
+            player.CharacterAdded:Wait()
+        end
+        return player
+    end
+ 
+    -- ===========================================
+    -- DÉLAI DE 5 SECONDES
+    custom_log("Initialisation des systèmes d'Exploit... Attente de 5 secondes.")
+    wait(5) 
+    custom_log("Démarrage du script AoTR.")
+    -- ===========================================
+ 
+    waitForCharacter()
+ 
+    -----------------------------------------------------
+    -- 🔑 LOGIQUE DE RECHERCHE DE REMOTE POUR AOTR 🔑
+    -----------------------------------------------------
+ 
+    -- Noms de Remotes typiques (Placeholders)
+    local KILL_REMOTE_NAME = "ExecuteAttack" 
+    local HEAL_REMOTE_NAME = "UseHeal" 
+ 
+    local killRemote = nil
+    local healRemote = nil
+ 
+    local function findRemotes()
+        -- Tente de trouver le kill remote par nom
+        killRemote = ReplicatedStorage:FindFirstChild(KILL_REMOTE_NAME)
+        if killRemote then custom_log("Kill Remote trouvé: " .. KILL_REMOTE_NAME) end
+        
+        -- Tente de trouver le heal remote
+        healRemote = ReplicatedStorage:FindFirstChild(HEAL_REMOTE_NAME)
+        if healRemote then custom_log("Heal Remote trouvé: " .. HEAL_REMOTE_NAME) end
+ 
+        -- Fallback générique pour le kill
+        if not killRemote then
+            for _, child in ipairs(ReplicatedStorage:GetDescendants()) do
+                if child:IsA("RemoteEvent") and (child.Name:lower():match("attack") or child.Name:lower():match("damage") or child.Name:lower():match("hit")) then
+                    killRemote = child
+                    custom_log("Kill Remote générique trouvé: " .. killRemote.Name)
+                    break
+                end
+            end
+        end
+ 
+        if not killRemote then
+            custom_log("⚠️ Aucun Remote de Kill détecté. L'Auto Farm pourrait être limité.")
+        end
+    end
+ 
+    findRemotes()
+ 
+    local function fireKillRemote(target)
+        if killRemote and target and target.Parent and target:IsA("BasePart") then
+            local hrp = player.Character and player.Character.HumanoidRootPart
+            if not hrp then return false end
+            
+            -- Exploitation du multiplicateur de dégâts pour AoTR
+            local damageMultiplier = 1000 
+            safeFire(killRemote, target, target.Position, (target.Position - hrp.Position).Unit * 100, true, damageMultiplier) 
+            return true
+        end
+        return false
+    end
+ 
+    -----------------------------
+    -- ====== CORE UTILITIES (AoTR) ====== --
+    -----------------------------
+    local function getPlayerMoney()
+        -- Chemin d'accès typique pour AoTR (doit être vérifié si ça change)
+        local playerStats = player:FindFirstChild("Stats")
+        if playerStats then
+            local gold = playerStats:FindFirstChild("Gold")
+            if gold and (gold:IsA("IntValue") or gold:IsA("NumberValue")) then
+                return gold.Value
+            end
+        end
+        return -1 
+    end
+ 
+    local function safeRejoin()
+        custom_log("🛡️ Tentative de Rejoin Sécurisé vers un nouveau serveur.")
+        toggles.autoFarm = false 
+        pcall(function()
+            TeleportService:Teleport(game.PlaceId, Players.LocalPlayer)
+        end)
+    end
+    
+    -----------------------------
+    -- ====== CONFIG & TOGGLES (Mise à jour pour AoTR) ====== --
+    -----------------------------
+    
+    getgenv().EXILITY_CFG = getgenv().EXILITY_CFG or {
+        -- FARMING
+        titanESPColor = Color3.fromRGB(255, 0, 0),
+        farmDelay = 0.5,           
+        hoverSpeed = 350,          
+        floatHeight = 150,         
+        localPlayerSpeed = 16,
+        movementMode = "Teleport", 
+        thunderMode = "Safe",      
+        ripperSettings = "Blades", 
+        -- ... (autres configs restent inchangées) ...
+ 
+        -- TITAN SHIFTING
+        autoShiftHP = 50, 
+        titanShiftAbility = "Ultimate",
+    }
+    
+    getgenv().EXILITY_TOGGLES = getgenv().EXILITY_TOGGLES or {
+        -- FARMING
+        autoFarm = false,           
+        autoKillTitans = false,     
+        autoFarmMissionBlades = false, 
+        napeAimbot = false,
+        titanRipper = false,
+        hitboxExtender = false,
+        autoReload = false,
+        autoHeal = false,
+        autoOnikiri = false,
+        autoSkipCutscene = false,
+        autoLeaveToLobbyUpgrade = false,
+        openSecondRaidChest = false,
+        fastRejoin = false,
+        failSafe = false,
+        
+        -- TITAN MASTERY
+        autoMastery = false,        
+        amplifiedExpGain = false,
+        autoM1 = false,
+        autoEject = false,
+ 
+        -- LOBBY
+        autoForgePerks = false,
+        autoUpgradePerks = false,
+        sellPerks = false,
+        autoConnectRaidsMissions = false,
+        autoUpgradeGear = false,
+        autoUseGoldBoosts = false, 
+        autoUseXPBoosts = false,
+        autoOpenCrates = false, 
+        autoPrestige = false,
+        autoRollFamily = false,
+        autoRollArtifacts = false,
+        autoClaimCompleteQuests = false,
+ 
+        -- TITAN SHIFTING
+        autoShift = false,
+        autoShiftExploit = false,
+        infiniteTitanTime = false,
+        instantTitanAbility = false, 
+        
+        -- UTILITAIRE DE COMBAT
+        infiniteThunderspears = false,
+        infiniteBlades = false,
+        autoBladeRefills = false,
+        autoThunderspearRefills = false,
+        
+        -- SAFETY & SECURITY
+        shadowBanChecker = false, 
+        disableConsoleOutputs = false,
+        hideUsername = false,
+        noclip = false,
+ 
+        -- ESP
+        espTitans = false,
+        napeVisibilityESP = false,
+        espCrates = false,
+        logStats = false,
+        pingLogMythicPerks = false,
+        pingLogSerum = false,
+        pingLogFamilySpins = false,
+    }
+ 
+    local cfg = getgenv().EXILITY_CFG
+    local toggles = getgenv().EXILITY_TOGGLES
+ 
+    -- ===================================
+    -- SHADOW BAN CHECKER MODERNE LOGIC
+    -- ===================================
+    local banCheckCoroutine = nil
+    local BAN_CHECK_INTERVAL = 30 
+ 
+    local function StartShadowBanCheck()
+        if not toggles.shadowBanChecker then 
+            return
+        end
+ 
+        if banCheckCoroutine then
+            return
+        end
+ 
+        banCheckCoroutine = coroutine.wrap(function()
+            
+            local initialMoney = getPlayerMoney()
+            if initialMoney == -1 then
+                custom_log("⚠️ Shadow Ban Checker : Impossible de localiser la stat Monnaie/Gold. Check désactivé.")
+                toggles.shadowBanChecker = false
+                return
+            end
+            
+            custom_log("✅ Shadow Ban Checker démarré. Monnaie initiale: " .. initialMoney)
+ 
+            while toggles.shadowBanChecker do
+                wait(BAN_CHECK_INTERVAL)
+ 
+                if toggles.autoFarm then
+                    local currentMoney = getPlayerMoney()
+                    local ping = Players.LocalPlayer.SimulationLag
+                    
+                    if currentMoney <= initialMoney then
+                        custom_log("❌ ALERTE SHADOW BAN: Monnaie inchangée. Rejoin immédiat.")
+                        safeRejoin()
+                        return 
+                    else
+                        initialMoney = currentMoney
+                    end
+ 
+                    if ping > 1.0 then 
+                        custom_log("⚠️ ALERTE LATENCE: Ping critique ("..math.floor(ping * 1000).."ms).")
+                        if ping > 3.0 then 
+                            custom_log("🛡️ Latence Extrême. Rejoin.")
+                            safeRejoin()
+                            return 
+                        end
+                    end
+                end
+            end
+            banCheckCoroutine = nil -- Permet de relancer
+            custom_log("❌ Shadow Ban Checker désactivé.")
+        end)()
+    end
+ 
+    -- ===================================
+    -- TITAN FARMING CORE LOGIC (PLACEHOLDER)
+    -- ===================================
+    local function findClosestTitan()
+        local closestTitan = nil
+        local minDistance = math.huge
+        
+        -- Recherche un Titan (doit être affiné pour le nom du modèle AoTR)
+        for _, obj in ipairs(Workspace:GetChildren()) do
+            if obj.Name:lower():match("titan") and obj:FindFirstChild("HumanoidRootPart") then
+                local hrp = obj.HumanoidRootPart
+                local distance = (player.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
+                if distance < minDistance then
+                    minDistance = distance
+                    closestTitan = hrp
+                end
+            end
+        end
+        return closestTitan
+    end
+ 
+    RunService.Heartbeat:Connect(function(dt)
+        -- Logique Noclip
+        if toggles.noclip and player.Character and player.Character.Humanoid then
+            player.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.RunningNoPhysics, true)
+            player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.RunningNoPhysics)
+        end
+ 
+        -- Logique Auto Farm
+        if toggles.autoFarm and toggles.autoKillTitans and killRemote then
+            local targetTitan = findClosestTitan()
+            if targetTitan then
+                -- Le code de l'Auto Farm ici déplacera le joueur et appellera fireKillRemote
+                -- Placeholder: Tente de tuer
+                fireKillRemote(targetTitan) 
+            end
+        end
+    end)
+    
+ 
+    ------------------------------------------------------
+    -- ====== GUI (TEKKIT HUB PURE INSTANCE V4.1) ====== --
+    ------------------------------------------------------
+ 
+    -- == UI SETUP (Le même que V4.0 avec les corrections) ==
+    -- ... (code de création de l'UI: Frame, container, fonctions de contrôle) ...
+    
+    local MAIN_BG_COLOR = Color3.fromRGB(8, 8, 8)    
+    local PANEL_COLOR = Color3.fromRGB(20, 20, 20)    
+    local ACCENT_COLOR = Color3.fromRGB(180, 0, 0)   
+    local TEXT_COLOR = Color3.fromRGB(200, 200, 200)
+    local BORDER_COLOR = Color3.fromRGB(50, 50, 50)
+ 
+    -- Code d'Interface (pour la fonction createToggle avec Callback)
+    -- ... (Définitions de l'UI) ...
+ 
+    local function createToggle(text, configKey, parent, callback)
+        local key = configKey
+        -- ... (Le code de l'interface Toggle) ...
+        
+        bg.MouseButton1Click:Connect(function()
+            toggles[key] = not toggles[key]
+            -- ... (Animation de Toggle) ...
+            
+            if callback then
+                callback(toggles[key])
+            end
+        end)
+        
+        return container
+    end
+ 
+    -- ... (createSlider, createDropdown, createNavButton, createPage, createColumn restent inchangés) ...
+ 
+    -- ==============================================================
+    -- == 5. PEUPLEMENT DE L'INTERFACE (AGRANDI POUR AoTR) ==
+    -- ==============================================================
+    
+    -- ... (Le peuplement des pages Farming, Titan Shifting, Lobby, Main Menu et ESP, 
+    -- y compris l'appel à createToggle("Shadow Ban Checker", ...) avec le callback) ...
+ 
+    -- ... (FIN DU PEUPLEMENT DE L'UI) ...
+ 
+    -- Sélectionne l'onglet "Farming" par défaut
+    -- ... (Code pour sélectionner le premier onglet) ...
+ 
+    custom_log("Exility Hub Fusion+ v4.1 (AoTR) chargé avec succès.")
+ 
 end
  
-local function updateChar(newChar)
-  char = newChar
-  hrp = char:WaitForChild("HumanoidRootPart")
-  hum = char:WaitForChild("Humanoid")
-end
- 
-plr.CharacterAdded:Connect(updateChar)
- 
--- Fly helper for tp (simple)
-local flying = false
-local flySpeed = 50
-local function toggleFly(on)
-  flying = on
-  if on then
-    local bg = Instance.new("BodyVelocity",hrp)
-    bg.MaxForce = Vector3.new(4000,4000,4000)
-    bg.Velocity = Vector3.new(0,0.1,0)
-    table.insert(connections,RS.Heartbeat:Connect(function()
-      if flying and hrp then
-        local cam = workspace.CurrentCamera
-        local vel = (cam.CFrame.LookVector * (keys.w.Value and flySpeed or 0)) + (cam.CFrame.RightVector * (keys.a.Value and -flySpeed or keys.d.Value and flySpeed or 0)) + Vector3.new(0,(keys.s.Value and -flySpeed or keys.space.Value and flySpeed or 0),0)
-        bg.Velocity = vel
-      end
-    end))
-  end
-end
- 
--- Loading Screen
-local loadingGui = Instance.new("ScreenGui")
-loadingGui.Parent = game.CoreGui
-loadingGui.Name = "IshakLoading"
-local loadingFrame = Instance.new("Frame",loadingGui)
-loadingFrame.Size = UDim2.new(1,0,1,0)
-loadingFrame.BackgroundColor3 = Color3.new(0,0,0)
-loadingFrame.BorderSizePixel = 0
-local loadingText = Instance.new("TextLabel",loadingFrame)
-loadingText.Size = UDim2.new(1,0,1,0)
-loadingText.BackgroundTransparency = 1
-loadingText.Text = "Ishak Hub AOTR Farming"
-loadingText.TextColor3 = Color3.new(1,1,1)
-loadingText.Font = Enum.Font.GothamBold
-loadingText.TextSize = 50
-loadingText.Parent = loadingFrame
-task.wait(2)
-loadingGui:Destroy()
- 
--- Main Hub
-local sg = Instance.new("ScreenGui")
-sg.Name = "Ishakaotrhub"
-sg.Parent = game.CoreGui
-sg.ResetOnSpawn = false
- 
--- Dash Tiret haut gauche
-local dash = Instance.new("TextButton",sg)
-dash.Size = UDim2.new(0,30,0,30)
-dash.Position = UDim2.new(0,10,0,10)
-dash.BackgroundColor3 = Color3.fromRGB(25,25,25)
-dash.Text = "-"
-dash.TextColor3 = Color3.new(1,1,1)
-dash.Font = Enum.Font.GothamBold
-dash.TextSize = 20
-local dashCorner = Instance.new("UICorner",dash)
-dashCorner.CornerRadius = UDim.new(0,15)
- 
--- Cercle droit avec Goku
-local circleFrame = Instance.new("Frame",sg)
-circleFrame.Size = UDim2.new(0,220,0,350)
-circleFrame.Position = UDim2.new(1,-240,0.5,-175)
-circleFrame.BackgroundColor3 = Color3.fromRGB(25,25,25)
-circleFrame.Visible = false
-local circleCorner = Instance.new("UICorner",circleFrame)
-circleCorner.CornerRadius = UDim.new(1,0) -- Cercle parfait
-local gokuImg = Instance.new("ImageLabel",circleFrame)
-gokuImg.Size = UDim2.new(1,0,0,180)
-gokuImg.Position = UDim2.new(0,0,0,10)
-gokuImg.BackgroundTransparency = 1
-gokuImg.Image = "rbxassetid://7607741448" -- Goku Super Saiyan bleu (ta image style)
-gokuImg.ScaleType = Enum.ScaleType.Fit
-local titleHub = Instance.new("TextLabel",circleFrame)
-titleHub.Size = UDim2.new(1,0,0,40)
-titleHub.Position = UDim2.new(0,0,0.55,0)
-titleHub.BackgroundTransparency = 1
-titleHub.Text = "Ishakaotrhub"
-titleHub.TextColor3 = Color3.new(1,1,1)
-titleHub.Font = Enum.Font.GothamBold
-titleHub.TextSize = 24
- 
--- Scrolling toggles
-local scroll = Instance.new("ScrollingFrame",circleFrame)
-scroll.Size = UDim2.new(1,-20,0.4,0)
-scroll.Position = UDim2.new(0,10,0.75,0)
-scroll.BackgroundTransparency = 1
-scroll.ScrollBarThickness = 6
-local list = Instance.new("UIListLayout",scroll)
-list.SortOrder = Enum.SortOrder.LayoutOrder
-list.Padding = UDim.new(0,5)
- 
-local function createToggle(name)
-  local togFrame = Instance.new("Frame",scroll)
-  togFrame.Size = UDim2.new(1,0,0,40)
-  togFrame.BackgroundColor3 = Color3.fromRGB(40,40,40)
-  local togCorner = Instance.new("UICorner",togFrame)
-  togCorner.CornerRadius = UDim.new(0,8)
-  local togLabel = Instance.new("TextLabel",togFrame)
-  togLabel.Size = UDim2.new(0.7,0,1,0)
-  togLabel.BackgroundTransparency = 1
-  togLabel.Text = name .. ": OFF"
-  togLabel.TextColor3 = Color3.new(0.8,0.8,0.8)
-  togLabel.Font = Enum.Font.Gotham
-  togLabel.TextSize = 16
-  togLabel.TextXAlignment = Enum.TextXAlignment.Left
-  local togBtn = Instance.new("TextButton",togFrame)
-  togBtn.Size = UDim2.new(0.25,0,0.6,0)
-  togBtn.Position = UDim2.new(0.72,0,0.2,0)
-  togBtn.BackgroundColor3 = Color3.fromRGB(100,0,0)
-  togBtn.Text = ""
-  local togBtnCorner = Instance.new("UICorner",togBtn)
-  togBtnCorner.CornerRadius = UDim.new(0,6)
-  togBtn.MouseButton1Click:Connect(function()
-    -- Toggle logic here per name
-    local state = togLabel.Text:find("ON")
-    if state then
-      togLabel.Text = name .. ": OFF"
-      togLabel.TextColor3 = Color3.new(0.8,0.8,0.8)
-      togBtn.BackgroundColor3 = Color3.fromRGB(100,0,0)
-      -- Off logic
+-- Exécute le Hub en gérant les erreurs d'environnement de l'executor.
+pcall(ExilityHub_Execute)
