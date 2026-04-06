@@ -1,1 +1,395 @@
-tewqweq
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("AOTR ULTIMATE HUB V8", "DarkTheme")
+ 
+--===================== DEĞİŞKENLER =====================
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualUser = game:GetService("VirtualUser")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local Player = Players.LocalPlayer
+ 
+-- Özellik durumları
+local autoReloadEnabled = false
+local killAuraEnabled = false
+local autoReplayEnabled = false
+local afkModeEnabled = false
+local raidModeEnabled = false
+local mansionModeEnabled = false
+local infiniteGasEnabled = false
+local autoExecuteEnabled = false
+ 
+-- Ayarlar
+local farmRange = 500          -- menzil (metre)
+local attackSpeed = 0.3        -- saldırı hızı (saniye)
+local reloadThreshold = 2       -- kılıç sayısı bu değerin altına düşünce yenile
+ 
+-- İstatistikler
+local totalKills = 0
+local totalReloads = 0
+local startTime = tick()
+ 
+--===================== YARDIMCI FONKSİYONLAR =====================
+ 
+-- Titan mı? kontrolü
+local function isTitan(model)
+    if not model or not model:IsA("Model") then return false end
+    local name = model.Name:lower()
+    return (name:find("titan") or name:find("abnormal") or name:find("colossal") 
+            or name:find("armored") or name:find("female") or name:find("beast") 
+            or name:find("jaw") or name:find("cart") or name:find("founding") 
+            or name:find("pure") or name:find("mindless") or name:find("smiling")) 
+            and model:FindFirstChild("Humanoid") and model.Humanoid.Health > 0
+end
+ 
+-- Haritadaki titan sayısını döndürür
+local function getTitanCount()
+    local count = 0
+    for _, v in pairs(workspace:GetDescendants()) do
+        if isTitan(v) then
+            count = count + 1
+        end
+    end
+    return count
+end
+ 
+-- Replay at (çoklu yöntem)
+local function triggerReplay()
+    local player = Player
+    -- Yöntem 1: DeathGui butonu
+    local deathGui = player.PlayerGui:FindFirstChild("DeathGui")
+    if deathGui then
+        local replayBtn = deathGui:FindFirstChild("ReplayButton") or deathGui:FindFirstChild("RespawnButton")
+        if replayBtn then
+            replayBtn:Fire()
+            return true
+        end
+    end
+    -- Yöntem 2: Remote event
+    local remotes = ReplicatedStorage:FindFirstChild("Remotes")
+    if remotes then
+        local respawnRemote = remotes:FindFirstChild("Respawn") or remotes:FindFirstChild("Replay") or remotes:FindFirstChild("SpawnCharacter")
+        if respawnRemote then
+            respawnRemote:FireServer()
+            return true
+        end
+    end
+    -- Yöntem 3: R tuşu simülasyonu
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.R, false, game)
+    wait(0.1)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.R, false, game)
+    return true
+end
+ 
+--===================== AUTO RELOAD THREAD =====================
+local function startAutoReload()
+    spawn(function()
+        while autoReloadEnabled or afkModeEnabled or raidModeEnabled or mansionModeEnabled do
+            pcall(function()
+                local char = Player.Character
+                if char and char:FindFirstChild("Blades") then
+                    if char.Blades.Value < reloadThreshold then
+                        ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Reload"):FireServer()
+                        totalReloads = totalReloads + 1
+                        -- Bekleme süresi moda göre değişsin
+                        if raidModeEnabled or mansionModeEnabled then
+                            wait(0.1)
+                        elseif afkModeEnabled then
+                            wait(0.5)
+                        else
+                            wait(0.3)
+                        end
+                    end
+                end
+                -- Gaz kontrolü
+                local gas = char and char:FindFirstChild("Gas")
+                if gas and gas.Value < 20 then
+                    ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Reload"):FireServer()
+                end
+            end)
+            -- Döngü beklemesi moda göre
+            if raidModeEnabled or mansionModeEnabled then
+                wait(0.3)
+            elseif afkModeEnabled then
+                wait(1.5)
+            else
+                wait(0.8)
+            end
+        end
+    end)
+end
+ 
+--===================== KILL AURA THREAD =====================
+local function startKillAura()
+    spawn(function()
+        while killAuraEnabled or afkModeEnabled or raidModeEnabled or mansionModeEnabled do
+            pcall(function()
+                local char = Player.Character
+                if char and char:FindFirstChild("HumanoidRootPart") then
+                    local pos = char.HumanoidRootPart.Position
+                    local attackCount = 0
+                    local maxAttacks = 20 -- her döngüde max saldırı (performans)
+                    for _, v in pairs(workspace:GetDescendants()) do
+                        if attackCount >= maxAttacks then break end
+                        if isTitan(v) then
+                            local part = v:FindFirstChild("Head") or v:FindFirstChild("HumanoidRootPart") or v:FindFirstChild("Torso")
+                            if part and (part.Position - pos).magnitude < farmRange then
+                                local remote = ReplicatedStorage:FindFirstChild("Remotes")
+                                if remote then
+                                    local attack = remote:FindFirstChild("AttackTitan")
+                                    if attack then
+                                        attack:FireServer("AttackTitan", v, "Nape")
+                                        attackCount = attackCount + 1
+                                        totalKills = totalKills + 1
+                                    end
+                                end
+                                -- Saldırı hızı moda göre
+                                if raidModeEnabled or mansionModeEnabled then
+                                    wait(0.1)
+                                elseif afkModeEnabled then
+                                    wait(0.5)
+                                else
+                                    wait(attackSpeed)
+                                end
+                            end
+                        end
+                    end
+                end
+            end)
+            -- Döngü beklemesi
+            if raidModeEnabled or mansionModeEnabled then
+                wait(0.2)
+            elseif afkModeEnabled then
+                wait(1.5)
+            else
+                wait(0.8)
+            end
+        end
+    end)
+end
+ 
+--===================== AUTO REPLAY (ölünce) THREAD =====================
+local function startAutoReplay()
+    spawn(function()
+        while autoReplayEnabled or afkModeEnabled or raidModeEnabled or mansionModeEnabled do
+            pcall(function()
+                local char = Player.Character
+                if char and char:FindFirstChild("Humanoid") and char.Humanoid.Health <= 0 then
+                    Library:Notify("Ölüm tespit edildi, replay atılıyor...")
+                    wait(1.5)
+                    triggerReplay()
+                    wait(2)
+                end
+            end)
+            wait(2)
+        end
+    end)
+end
+ 
+--===================== RAID/MANSION TAKİP THREAD (titanlar bitince replay) =====================
+local function startRaidMansionTracker()
+    spawn(function()
+        while raidModeEnabled or mansionModeEnabled do
+            pcall(function()
+                local titanCount = getTitanCount()
+                if titanCount == 0 then
+                    Library:Notify("Hiç titan kalmadı! Replay atılıyor...")
+                    wait(2)
+                    triggerReplay()
+                    wait(5) -- replay sonrası biraz bekle, tekrar hemen atmasın
+                end
+            end)
+            wait(3) -- 3 saniyede bir kontrol et
+        end
+    end)
+end
+ 
+--===================== GUI: ANA SEKME =====================
+local MainTab = Window:NewTab("Ana")
+local MainSection = MainTab:NewSection("Savaş Özellikleri")
+ 
+MainSection:NewToggle("Auto Reload", "Kılıç bitince/kırılınca otomatik yeniler", function(state)
+    autoReloadEnabled = state
+    if state then startAutoReload() end
+    Library:Notify("Auto Reload " .. (state and "Açık" or "Kapalı"))
+end)
+ 
+MainSection:NewToggle("Kill Aura", "Otomatik titan öldürme (ayarlanabilir)", function(state)
+    killAuraEnabled = state
+    if state then startKillAura() end
+    Library:Notify("Kill Aura " .. (state and "Açık" or "Kapalı"))
+end)
+ 
+MainSection:NewToggle("Auto Replay (ölünce)", "Öldüğünüzde otomatik yeniden doğar", function(state)
+    autoReplayEnabled = state
+    if state then startAutoReplay() end
+    Library:Notify("Auto Replay " .. (state and "Açık" or "Kapalı"))
+end)
+ 
+--===================== RAID MODU SEKME =====================
+local RaidTab = Window:NewTab("Raid Modu")
+local RaidSection = RaidTab:NewSection("Raid Ayarları")
+ 
+RaidSection:NewToggle("Raid Modu", "Tüm titanlar ölünce otomatik replay (hızlı saldırı)", function(state)
+    raidModeEnabled = state
+    if state then
+        -- mansion modunu kapat
+        mansionModeEnabled = false
+        -- özellikleri aç
+        autoReloadEnabled = true
+        killAuraEnabled = true
+        autoReplayEnabled = true
+        infiniteGasEnabled = true
+        -- raid ayarları
+        farmRange = 1000
+        attackSpeed = 0.1
+        reloadThreshold = 3
+        -- thread'leri başlat
+        startAutoReload()
+        startKillAura()
+        startAutoReplay()
+        startRaidMansionTracker()
+        Library:Notify("Raid Modu Aktif! (Menzil: 1000m, Hız: 0.1s)")
+    else
+        raidModeEnabled = false
+        Library:Notify("Raid Modu Kapalı")
+    end
+end)
+ 
+RaidSection:NewToggle("Mansion Modu", "Konak görevlerinde tüm titanlar ölünce replay", function(state)
+    mansionModeEnabled = state
+    if state then
+        raidModeEnabled = false
+        autoReloadEnabled = true
+        killAuraEnabled = true
+        autoReplayEnabled = true
+        infiniteGasEnabled = true
+        farmRange = 800
+        attackSpeed = 0.2
+        reloadThreshold = 2
+        startAutoReload()
+        startKillAura()
+        startAutoReplay()
+        startRaidMansionTracker()
+        Library:Notify("Mansion Modu Aktif! (Menzil: 800m, Hız: 0.2s)")
+    else
+        mansionModeEnabled = false
+        Library:Notify("Mansion Modu Kapalı")
+    end
+end)
+ 
+--===================== AFK MODU SEKME =====================
+local AFKTab = Window:NewTab("AFK Modu")
+local AFKSection = AFKTab:NewSection("Gece Boyu AFK")
+ 
+AFKSection:NewToggle("AFK Modu", "Tüm özellikleri açar, düşük CPU ile gece boyu çalışır", function(state)
+    afkModeEnabled = state
+    if state then
+        autoReloadEnabled = true
+        killAuraEnabled = true
+        autoReplayEnabled = true
+        infiniteGasEnabled = true
+        farmRange = 600
+        attackSpeed = 0.5
+        reloadThreshold = 2
+        startAutoReload()
+        startKillAura()
+        startAutoReplay()
+        Library:Notify("AFK Modu Aktif! İyi geceler...")
+    else
+        afkModeEnabled = false
+        Library:Notify("AFK Modu Kapalı")
+    end
+end)
+ 
+--===================== AYARLAR SEKME =====================
+local SettingsTab = Window:NewTab("Ayarlar")
+local SettingsSection = SettingsTab:NewSection("Genel Ayarlar")
+ 
+SettingsSection:NewSlider("Saldırı Menzili", "metre", 1000, 100, function(v)
+    farmRange = v
+    Library:Notify("Menzil: " .. v .. "m")
+end, 500)
+ 
+SettingsSection:NewSlider("Saldırı Hızı", "saniye", 1, 0.1, function(v)
+    attackSpeed = v
+    Library:Notify("Saldırı Hızı: " .. v .. "s")
+end, 0.3)
+ 
+SettingsSection:NewSlider("Reload Eşiği", "Kılıç sayısı bu değerin altına düşünce yenile", 5, 1, function(v)
+    reloadThreshold = v
+    Library:Notify("Reload eşiği: " .. v)
+end, 2)
+ 
+SettingsSection:NewToggle("Sonsuz Gaz", "Gaz hiç bitmez", function(state)
+    infiniteGasEnabled = state
+    if state then
+        local mt = getrawmetatable(game)
+        local old = mt.__namecall
+        setreadonly(mt, false)
+        mt.__namecall = newcclosure(function(self, ...)
+            if getnamecallmethod() == "FireServer" and self.Name == "GasDepleteEvent" then
+                return
+            end
+            return old(self, ...)
+        end)
+        setreadonly(mt, true)
+        Library:Notify("Sonsuz Gaz Aktif")
+    end
+end)
+ 
+SettingsSection:NewToggle("Auto Execute", "Harita değişse bile özellikler devam eder", function(state)
+    autoExecuteEnabled = state
+    if state then
+        Player.OnTeleport:Connect(function()
+            if autoExecuteEnabled then
+                wait(3)
+                Library:Notify("Yeni haritaya geçildi, özellikler devam ediyor...")
+                -- Açık olan modları yeniden başlat (thread'ler zaten çalışıyor olacak)
+            end
+        end)
+        Library:Notify("Auto Execute Aktif")
+    end
+end)
+ 
+--===================== İSTATİSTİK SEKME =====================
+local StatsTab = Window:NewTab("İstatistik")
+local StatsSection = StatsTab:NewSection("Bilgiler")
+ 
+StatsSection:NewButton("İstatistikleri Göster", "Toplam kill, reload ve çalışma süresi", function()
+    local elapsed = math.floor((tick() - startTime) / 60)
+    Library:Notify(string.format("Toplam Kill: %d\nToplam Reload: %d\nÇalışma Süresi: %d dk", totalKills, totalReloads, elapsed))
+end)
+ 
+StatsSection:NewButton("Tüm Özellikleri Kapat", "Acil durdurma", function()
+    autoReloadEnabled = false
+    killAuraEnabled = false
+    autoReplayEnabled = false
+    afkModeEnabled = false
+    raidModeEnabled = false
+    mansionModeEnabled = false
+    infiniteGasEnabled = false
+    Library:Notify("Tüm özellikler kapatıldı")
+end)
+ 
+--===================== BAŞLANGIÇ MESAJI =====================
+Library:Notify("AOTR Ultimate Hub V8 yüklendi! Xeno uyumlu.")
+Library:Notify("Tüm haritalarda çalışır, Raid/Mansion modlarında otomatik replay.")
+ 
+--===================== ANTI-AFK =====================
+spawn(function()
+    while true do
+        wait(60)
+        pcall(function()
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
+        end)
+    end
+end)
+ 
+--===================== TELEPORT KONTROLÜ (Auto Execute için) =====================
+Player.OnTeleport:Connect(function()
+    if autoExecuteEnabled then
+        wait(3)
+        Library:Notify("Teleport oldunuz, script çalışmaya devam ediyor...")
+    end
+end)
